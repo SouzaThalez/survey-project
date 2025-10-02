@@ -61,3 +61,6 @@ For more information on using the Angular CLI, including detailed command refere
 
 Fazer deploy:
 ng deploy --base-href="https://SouzaThalez.github.io/survey-project/"
+
+link para acessar:
+https://souzathalez.github.io/survey-project

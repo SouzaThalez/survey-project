@@ -1,0 +1,124 @@
+<!-- new-exam.html -->
+<form class="page-body" [formGroup]="form">
+  <div class="page-title">
+    <h2>Nova prova</h2>
+  </div>
+
+  <div class="page-description">Preencha os dados e gere o modelo automaticamente.</div>
+
+  <div class="page-container">
+    <!-- Left column -->
+    <div class="form">
+      <mat-form-field appearance="outline">
+        <mat-label>Nome da prova</mat-label>
+        <input matInput formControlName="examName" placeholder="Ex.: Prova de Urgência e Emergência">
+        <mat-error *ngIf="form.controls.examName.touched && form.controls.examName.invalid">
+          Informe um nome válido (mín. 3 caracteres).
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Treinamento de habilidade</mat-label>
+        <mat-select formControlName="skillTraining">
+          <mat-option *ngFor="let t of trainingOptions" [value]="t.value">{{ t.label }}</mat-option>
+        </mat-select>
+        <mat-error *ngIf="form.controls.skillTraining.touched && form.controls.skillTraining.invalid">
+          Selecione um treinamento.
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Número de questões</mat-label>
+        <mat-select formControlName="questionsCount">
+          <mat-option *ngFor="let n of questionCountOptions" [value]="n">{{ n }}</mat-option>
+        </mat-select>
+        <mat-error *ngIf="form.controls.questionsCount.touched && form.controls.questionsCount.invalid">
+          Selecione a quantidade de questões.
+        </mat-error>
+      </mat-form-field>
+
+      <!-- NEW: Global options configuration -->
+      <mat-form-field appearance="outline">
+        <mat-label>Número de opções (todas as questões)</mat-label>
+        <mat-select formControlName="optionsCount">
+          <mat-option *ngFor="let n of optionsCountChoices" [value]="n">{{ n }}</mat-option>
+        </mat-select>
+        <mat-error *ngIf="form.controls.optionsCount.touched && form.controls.optionsCount.invalid">
+          Selecione a quantidade de opções.
+        </mat-error>
+      </mat-form-field>
+
+      <!-- Global option values -->
+      <div formArrayName="globalOptions" class="global-options">
+        <div class="option-row" *ngFor="let opt of globalOptionsArray.controls; let k = index" [formGroupName]="k">
+          <mat-form-field appearance="outline" class="option-points">
+            <mat-label>Valor da opção #{{ k + 1 }}</mat-label>
+            <input matInput type="number" formControlName="value" min="0" step="0.5">
+          </mat-form-field>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right column -->
+    <div class="form text-area-form">
+      <mat-form-field class="text-area" appearance="outline">
+        <mat-label>Caso clínico</mat-label>
+        <textarea matInput formControlName="clinicalCase" rows="8" placeholder="Descreva o caso clínico..."></textarea>
+        <mat-error *ngIf="form.controls.clinicalCase.touched && form.controls.clinicalCase.invalid">
+          Informe o caso clínico.
+        </mat-error>
+      </mat-form-field>
+    </div>
+
+    <div class="footer">
+      <button mat-stroked-button color="primary" type="button" (click)="generateExam()">
+        <mat-icon>link</mat-icon>
+        Gerar
+      </button>
+
+      <button mat-button type="button" (click)="resetAll()">
+        <mat-icon>refresh</mat-icon>
+        Limpar
+      </button>
+
+      <div class="totals">
+        <span>Total de questões: {{ questionsArray.length }}</span>
+        <span>Total de pontos: {{ totalPoints }}</span>
+      </div>
+    </div>
+
+    <div class="share" *ngIf="lastShareUrl">
+      <strong>Link gerado:</strong>
+      <a [href]="lastShareUrl" target="_blank" rel="noopener">{{ lastShareUrl }}</a>
+    </div>
+  </div>
+
+  <!-- Questions area -->
+  <div class="exam-container" *ngIf="questionsArray.length > 0">
+    <div class="header" *ngIf="form.controls.clinicalCase.value">
+      <div class="clinic-case">
+        {{ form.controls.clinicalCase.value }}
+      </div>
+    </div>
+
+    <div class="exam-container-body">
+      <div class="question-field"
+           *ngFor="let q of questionsArray.controls; let i = index; trackBy: trackByIndex"
+           [formGroup]="q">
+        <div class="q-head">
+          <div class="q-title">Questão - {{ i + 1 }}</div>
+        </div>
+
+        <mat-form-field class="column-text-area" appearance="outline">
+          <mat-label>Enunciado</mat-label>
+          <textarea matInput formControlName="text" rows="4" placeholder="Descreva..."></textarea>
+          <mat-error *ngIf="q.controls.text.touched && q.controls.text.invalid">
+            Enunciado obrigatório (mín. 3 caracteres).
+          </mat-error>
+        </mat-form-field>
+
+        <!-- NOTE: No per-question options here anymore -->
+      </div>
+    </div>
+  </div>
+</form>

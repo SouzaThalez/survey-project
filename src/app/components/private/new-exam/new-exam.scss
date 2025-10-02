@@ -1,0 +1,186 @@
+/* new-exam.scss */
+:host {
+  display: block;
+}
+
+.page-body {
+  --card-border: #e3e6eb;
+  --card-radius: 12px;
+  --pad: 16px;
+
+  display: grid;
+  gap: 16px;
+  padding: 16px;
+
+  .page-title h2 {
+    margin: 0;
+    font-weight: 700;
+    letter-spacing: .2px;
+  }
+
+  .page-description {
+    color: #5f6b7a;
+    font-size: 14px;
+  }
+
+  .page-container,
+  .exam-container {
+    max-width: 1100px;
+    width: 100%;
+    border: 1px solid var(--card-border);
+    border-radius: var(--card-radius);
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(20, 20, 20, 0.03);
+    padding: var(--pad);
+
+    display: grid;
+    gap: 12px;
+  }
+
+  .page-container {
+    grid-template-columns: 1.1fr 1fr;
+    align-items: start;
+
+    .form {
+      display: grid;
+      gap: 10px;
+
+      .text-area {
+        min-height: 230px;
+      }
+
+      &.text-area-form {
+        margin-left: 10px;
+      }
+    }
+
+    .footer {
+      grid-column: 1 / -1;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+
+      .generate-btn {
+        min-width: 240px;
+      }
+
+      .totals {
+        margin-left: auto;
+        display: flex;
+        gap: 16px;
+        color: #2f3a4a;
+        font-weight: 600;
+      }
+    }
+  }
+
+  .exam-container {
+    .header .clinic-case {
+      padding: 8px 10px;
+      background: #f7f9fc;
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      line-height: 1.5;
+      color: #2d3643;
+    }
+
+    .exam-container-body {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+
+      .question-field {
+        border: 1px solid var(--card-border);
+        border-radius: 10px;
+        padding: 12px;
+        display: grid;
+        gap: 8px;
+        background: #fff;
+
+        .q-head {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+
+          .q-title {
+            font-weight: 700;
+            color: #1b2636;
+          }
+
+          .q-score {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+
+            span {
+              color: #6a7482;
+              font-size: 13px;
+            }
+
+            .note-field {
+              width: 96px;
+              padding: 6px 8px;
+              border-radius: 8px;
+              border: 1px solid #cfd6e0;
+              outline: none;
+
+              &:focus {
+                border-color: #3f51b5;
+                box-shadow: 0 0 0 3px rgba(63, 81, 181, 0.12);
+              }
+            }
+          }
+        }
+
+      }
+    }
+
+    /* Tablet */
+    @media (max-width: 1024px) {
+      .exam-container-body {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    /* Mobile */
+    @media (max-width: 600px) {
+      .exam-container-body {
+        grid-template-columns: 1fr;
+      }
+    }
+  }
+
+  /* Stack on small screens */
+  @media (max-width: 960px) {
+    .page-container {
+      grid-template-columns: 1fr;
+      .form.text-area-form { margin-left: 0; }
+    }
+  }
+}
+
+.options {
+  display: grid;
+  gap: 8px;
+  margin-top: 6px;
+
+  .option-row {
+    display: grid;
+    grid-template-columns: 1fr 130px; /* nome | pontos */
+    gap: 8px;
+
+    .option-name, .option-points { width: 100%; }
+  }
+}
+
+@media (max-width: 600px) {
+  .options .option-row {
+    grid-template-columns: 1fr 120px;
+  }
+}
+
+.global-options {
+    display: flex;
+    gap: 10px;
+}

@@ -1,0 +1,99 @@
+<div class="all-page">
+  <div class="paper">
+    <div class="header-line">
+      <h1>Provas salvas</h1>
+
+      <div class="toolbar">
+        <mat-form-field appearance="outline" class="search">
+          <mat-label>Buscar</mat-label>
+          <input matInput [(ngModel)]="search" placeholder="Nome, caso clínico ou enunciado...">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="filter">
+          <mat-label>Treinamento</mat-label>
+          <mat-select [(ngModel)]="trainingFilter">
+            <mat-option value="all">Todos</mat-option>
+            <mat-option value="th1">TH 1</mat-option>
+            <mat-option value="th2">TH 2</mat-option>
+            <mat-option value="th3">TH 3</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="sorter">
+          <mat-label>Ordenar</mat-label>
+          <mat-select [(ngModel)]="sortBy">
+            <mat-option value="newest">Mais recente</mat-option>
+            <mat-option value="oldest">Mais antiga</mat-option>
+            <mat-option value="name">Nome (A–Z)</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <button mat-stroked-button color="warn" (click)="clearAll()">
+          <mat-icon>delete_sweep</mat-icon>
+          Remover tudo
+        </button>
+      </div>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    <div class="cards" *ngIf="filtered.length; else emptyState">
+      <div class="card" *ngFor="let e of filtered">
+        <div class="card-header">
+          <div class="title">{{ e.examName || 'Prova' }}</div>
+          <div class="actions">
+            <a mat-stroked-button color="primary"
+               [routerLink]="['/private/responder-prova']"
+               [queryParams]="{ examId: e.id }" target="_blank">
+              <mat-icon>open_in_new</mat-icon>
+              Responder
+            </a>
+            <button mat-button (click)="copyLink(e)">
+              <mat-icon>link</mat-icon>
+              Copiar link
+            </button>
+            <button mat-icon-button color="warn" (click)="deleteOne(e.id)" matTooltip="Excluir prova">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+        </div>
+
+        <div class="meta">
+          <span><mat-icon>event</mat-icon> {{ e.createdAt | date:'short' }}</span>
+          <span><mat-icon>school</mat-icon> {{ trainingLabel(e.skillTraining) }}</span>
+          <span><mat-icon>help</mat-icon> {{ e.questions?.length || 0 }} questões</span>
+          <span><mat-icon>score</mat-icon> {{ e.totalPoints }} pontos</span>
+        </div>
+
+        <div class="options-head" *ngIf="optionHeaders(e).length">
+          <span class="label">Opções:</span>
+          <div class="chips">
+            <span class="chip" *ngFor="let h of optionHeaders(e)">{{ h }}</span>
+          </div>
+        </div>
+
+        <div class="case">
+          <div class="case-title">Caso clínico</div>
+          <div class="case-text">{{ e.clinicalCase }}</div>
+        </div>
+
+        <div class="questions">
+          <div class="q" *ngFor="let q of e.questions | slice:0:5; let i = index">
+            <div class="idx">{{ i + 1 }}.</div>
+            <div class="txt">{{ q.text }}</div>
+          </div>
+          <div class="more" *ngIf="e.questions.length > 5">
+            + {{ e.questions.length - 5 }} mais…
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <ng-template #emptyState>
+      <div class="empty">
+        <h3>Nenhuma prova salva</h3>
+        <p>Crie uma nova em <a routerLink="/private/nova-prova">Nova prova</a>.</p>
+      </div>
+    </ng-template>
+  </div>
+</div>

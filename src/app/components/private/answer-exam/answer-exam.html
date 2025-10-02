@@ -1,0 +1,66 @@
+<div class="answer-page" *ngIf="exam as e">
+  <div class="paper">
+    <h1 class="title">{{ e.examName || 'Prova' }}</h1>
+
+    <p class="disclaimer">
+      Quando você enviar este formulário, ele não coletará automaticamente seus detalhes, como nome e
+      endereço de email, a menos que você mesmo os forneça.
+    </p>
+
+    <mat-divider></mat-divider>
+
+    <div class="case-block">
+      <div class="required">* Obrigatória</div>
+      <h2 class="case-title">Caso clínico</h2>
+      <p class="case-text">{{ e.clinicalCase }}</p>
+    </div>
+
+    <form [formGroup]="answersForm" class="answers-form" *ngIf="e.questions.length">
+
+      <!-- Column headers -->
+      <div class="grid header-row" [style.--cols]="e.questions[0]?.options?.length || 3">
+        <div class="cell qcell header"> </div>
+        <div class="cell ocell header" *ngFor="let h of optionHeaders">{{ h }}</div>
+      </div>
+
+      <!-- Questions -->
+      <div class="grid body-rows" [style.--cols]="e.questions[0]?.options?.length || 3">
+        <ng-container *ngFor="let q of e.questions; let i = index">
+          <div class="cell qcell">
+            <div class="qindex">{{ i + 1 }}.</div>
+            <div class="qtext">{{ q.text }}</div>
+          </div>
+
+          <!-- Options as a radio group -->
+          <mat-radio-group class="row-radios" [formControl]="selections.at(i)">
+            <div class="cell ocell" *ngFor="let opt of q.options; let k = index">
+              <mat-radio-button [value]="k"></mat-radio-button>
+            </div>
+          </mat-radio-group>
+        </ng-container>
+      </div>
+
+      <div class="footer-line">
+        <div class="totals">
+          <strong>Total selecionado:</strong>
+          <span>{{ selectedTotal }} pontos</span>
+        </div>
+
+        <div class="actions">
+          <button mat-raised-button color="primary" type="button" (click)="submitAnswers()">
+            Enviar respostas
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Simple not-found fallback -->
+<div class="answer-page" *ngIf="!exam">
+  <div class="paper">
+    <h2>Prova não encontrada</h2>
+    <p>Verifique o link recebido.</p>
+    <button mat-stroked-button color="primary" routerLink="/private/nova-prova">Criar nova prova</button>
+  </div>
+</div>

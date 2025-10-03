@@ -190,7 +190,7 @@ export class ExamResults implements OnInit {
       <thead>
         <tr>
           <th class="col-idx">#</th>
-          <th>Enunciado</th>
+          <th>Enunciados</th>
           <th class="col-pts">Pontos</th>
         </tr>
       </thead>

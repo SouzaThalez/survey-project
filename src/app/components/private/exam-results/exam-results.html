@@ -89,11 +89,12 @@
                 <strong>{{ s.total }}</strong> / {{ c.stats.max }}
                 <span class="pct">({{ percent(s.total, c.stats.max) }})</span>
               </div>
-              <a mat-button color="primary"
-                 routerLink="/private/responder-prova"
-                 [queryParams]="{ examId: c.exam.id }">
-                Refazer
-              </a>
+
+              <!-- Botão alterado: Imprimir PDF -->
+              <button mat-stroked-button color="primary" (click)="printSubmission(c.exam, s)">
+                <mat-icon>print</mat-icon>
+                Imprimir PDF
+              </button>
             </div>
           </div>
         </div>

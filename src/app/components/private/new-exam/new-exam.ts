@@ -1,9 +1,10 @@
-// new-exam.component.ts
+// new-exam.component.ts (updated: totalPoints = max(globalOptions) * number of questions)
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Subscription } from 'rxjs';
 
+// ===== Types =====
 type GlobalOptionGroup = {
   value: FormControl<number | null>;
 };
@@ -13,7 +14,9 @@ type QuestionGroup = {
 };
 
 type GeneratedOption = { value: number | null };
+
 type GeneratedQuestion = { text: string; options: GeneratedOption[]; totalPoints: number };
+
 type GeneratedExam = {
   id: number;                 // timestamp (ms)
   createdAt: string;          // ISO
@@ -39,8 +42,8 @@ export class NewExam implements OnInit, OnDestroy {
     examName: FormControl<string | null>;
     skillTraining: FormControl<string | null>;
     questionsCount: FormControl<number | null>;
-    optionsCount: FormControl<number | null>;            // NEW: global number of options
-    globalOptions: FormArray<FormGroup<GlobalOptionGroup>>; // NEW: global option values
+    optionsCount: FormControl<number | null>;
+    globalOptions: FormArray<FormGroup<GlobalOptionGroup>>;
     clinicalCase: FormControl<string | null>;
     questions: FormArray<FormGroup<QuestionGroup>>;
   }>;
@@ -56,7 +59,7 @@ export class NewExam implements OnInit, OnDestroy {
   ];
 
   questionCountOptions = [3, 5, 10, 15];
-  optionsCountChoices = [2, 3, 4]; // you can extend this
+  optionsCountChoices = [2, 3, 4, 5];
 
   private subs: Subscription[] = [];
 
@@ -65,8 +68,8 @@ export class NewExam implements OnInit, OnDestroy {
     this.form = this.fb.nonNullable.group({
       examName: this.fb.control<string | null>(null, [Validators.required, Validators.minLength(3)]),
       skillTraining: this.fb.control<string | null>(null, Validators.required),
-      questionsCount: this.fb.control<number | null>(3, Validators.required), // default 3
-      optionsCount: this.fb.control<number | null>(3, Validators.required),   // default 3
+      questionsCount: this.fb.control<number | null>(3, Validators.required),
+      optionsCount: this.fb.control<number | null>(3, Validators.required),
       globalOptions: this.fb.array<FormGroup<GlobalOptionGroup>>([]),
       clinicalCase: this.fb.control<string | null>(null, Validators.required),
       questions: this.fb.array<FormGroup<QuestionGroup>>([])
@@ -147,16 +150,17 @@ export class NewExam implements OnInit, OnDestroy {
     }
   }
 
-  // === Totals ===
-  private sumGlobalOptions(): number {
-    return this.globalOptionsArray.controls
-      .reduce((s, g) => s + Number(g.controls.value.value ?? 0), 0);
+  // === Totals (MAX logic) ===
+  private maxGlobalOption(): number {
+    const values = this.globalOptionsArray.controls.map(g => Number(g.controls.value.value ?? 0));
+    // Ensure non-empty for Math.max; default to 0
+    return values.length ? Math.max(...values) : 0;
   }
 
   get totalPoints(): number {
-    const perQuestion = this.sumGlobalOptions();
+    const perQuestionMax = this.maxGlobalOption();
     const count = this.questionsArray.length;
-    return perQuestion * count;
+    return perQuestionMax * count;
   }
 
   // === Local persistence & link generation ===
@@ -180,7 +184,7 @@ export class NewExam implements OnInit, OnDestroy {
     return `${base}?examId=${id}`;
   }
 
-  // === Create & save exam ===
+  // === Create & save exam (uses MAX per-question logic) ===
   generateExam(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -194,16 +198,17 @@ export class NewExam implements OnInit, OnDestroy {
     const templateOptions: GeneratedOption[] = this.globalOptionsArray.controls.map(o => ({
       value: o.controls.value.value
     }));
-    const perQuestionTotal = templateOptions.reduce((s, x) => s + Number(x.value ?? 0), 0);
+
+    const perQuestionMax = this.maxGlobalOption();
 
     // Create questions using the shared template
     const questions: GeneratedQuestion[] = this.questionsArray.controls.map(q => ({
       text: q.controls.text.value,
       options: templateOptions.map(o => ({ value: o.value })), // clone values
-      totalPoints: perQuestionTotal
+      totalPoints: perQuestionMax
     }));
 
-    const totalPoints = perQuestionTotal * questions.length;
+    const totalPoints = perQuestionMax * questions.length;
     const id = Date.now();
     const shareUrl = this.getShareUrl(id);
 
@@ -240,3 +245,4 @@ export class NewExam implements OnInit, OnDestroy {
 
   trackByIndex = (i: number) => i;
 }
+ 

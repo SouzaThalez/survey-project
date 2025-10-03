@@ -123,4 +123,108 @@ export class ExamResults implements OnInit {
 
   trackByCard = (_: number, c: ExamCard) => c.exam.id;
   trackBySub = (_: number, s: SavedResponse) => `${s.examId}-${s.submittedAt}`;
+
+  /** Abre uma aba com HTML pronto para imprimir e gera o PDF via diálogo do navegador */
+  printSubmission(exam: GeneratedExam, sub: SavedResponse): void {
+    try {
+      const win = window.open('', '_blank', 'width=900,height=1000');
+      if (!win) return;
+
+      const submittedAt = new Date(sub.submittedAt).toLocaleString();
+      const createdAt = new Date(exam.createdAt).toLocaleString();
+
+      // Monta linhas da tabela (questões)
+      const answersHtml = sub.answers
+        .map((a) => {
+          const qIndex = a.questionIndex + 1;
+          const qText = exam.questions[a.questionIndex]?.text || '';
+          const pts = a.points ?? 0;
+          return `
+            <tr>
+              <td class="col-idx">${qIndex}</td>
+              <td class="col-text">${this.escapeHtml(qText)}</td>
+              <td class="col-pts">${pts}</td>
+            </tr>`;
+        })
+        .join('');
+
+      const resultadoPct = this.percent(sub.total, exam.totalPoints);
+
+      const html = `<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Resultado — ${this.escapeHtml(exam.examName || 'Prova')}</title>
+  <style>
+    *{box-sizing:border-box}
+    body{font-family: Roboto, Arial, sans-serif; margin:0; color:#111827}
+    .paper{max-width:920px; margin:0 auto; padding:28px}
+    h1{margin:0 0 6px; font-size:22px}
+    .muted{color:#6b7280; font-size:13px}
+    .meta{display:flex; gap:10px; flex-wrap:wrap; margin:10px 0 14px}
+    .chip{display:inline-flex; align-items:center; gap:6px; background:#f3f4f6; border:1px solid #e5e7eb; border-radius:999px; padding:3px 10px; font-size:12px}
+    .case{background:#f8f9fb; border:1px solid #e7ecf3; border-radius:8px; padding:10px; margin:10px 0 16px; white-space:pre-wrap}
+    table{width:100%; border-collapse:collapse; margin-top:8px}
+    thead th{background:#f1f3f4; text-align:left; padding:10px; border-bottom:1px solid #e5e7eb}
+    tbody td{padding:10px; border-bottom:1px solid #eef1f6; vertical-align:top}
+    .col-idx{width:48px; font-weight:600}
+    .col-pts{width:120px; text-align:right; font-weight:600}
+    .totals{display:flex; justify-content:flex-end; margin-top:12px; font-weight:700}
+    @media print { .no-print { display:none } }
+  </style>
+</head>
+<body>
+  <div class="paper">
+    <h1>${this.escapeHtml(exam.examName || 'Prova')}</h1>
+    <div class="muted">Criada em ${this.escapeHtml(createdAt)} • Envio em ${this.escapeHtml(submittedAt)}</div>
+
+    <div class="meta">
+      <span class="chip">Máximo: ${exam.totalPoints} pts</span>
+      <span class="chip">Questões: ${exam.questions.length || exam.questionsCount || 0}</span>
+      <span class="chip">Resultado: ${sub.total} / ${exam.totalPoints} (${resultadoPct})</span>
+    </div>
+
+    <div class="case">${this.escapeHtml(exam.clinicalCase || '')}</div>
+
+    <table>
+      <thead>
+        <tr>
+          <th class="col-idx">#</th>
+          <th>Enunciado</th>
+          <th class="col-pts">Pontos</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${answersHtml}
+      </tbody>
+    </table>
+
+    <div class="totals">Total: ${sub.total} / ${exam.totalPoints}</div>
+  </div>
+  <script>
+    window.onload = function(){
+      window.print();
+      setTimeout(() => window.close(), 300);
+    }
+  </script>
+</body>
+</html>`;
+
+      win.document.open();
+      win.document.write(html);
+      win.document.close();
+    } catch {
+      // silencia erros de popup/aba bloqueada
+    }
+  }
+
+  /** Util simples para evitar problemas com caracteres especiais ao montar HTML */
+  private escapeHtml(input: string): string {
+    return (input || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/\"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
 }

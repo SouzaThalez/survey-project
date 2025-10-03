@@ -1,7 +1,7 @@
 <div class="all-page">
   <div class="paper">
     <div class="header-line">
-      <h1>Provas salvas</h1>
+      <h1>Provas Criadas</h1>
 
       <div class="toolbar">
         <mat-form-field appearance="outline" class="search">
@@ -61,7 +61,7 @@
         <div class="meta">
           <span><mat-icon>event</mat-icon> {{ e.createdAt | date:'short' }}</span>
           <span><mat-icon>school</mat-icon> {{ trainingLabel(e.skillTraining) }}</span>
-          <span><mat-icon>help</mat-icon> {{ e.questions?.length || 0 }} questões</span>
+          <span><mat-icon>help</mat-icon> {{ e.questions.length || 0 }} questões</span>
           <span><mat-icon>score</mat-icon> {{ e.totalPoints }} pontos</span>
         </div>
 

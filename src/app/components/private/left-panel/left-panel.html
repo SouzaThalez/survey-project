@@ -1,31 +1,50 @@
-<div class="left-panel-container">
-    <div class="panel-list">
-        <div class="list-item-contaier">
-            <div class="list-item" routerLink="todas-prova" matTooltip="Nova prova">
-                <!-- <span class="material-symbols-outlined">
-                    folder_code
-                </span> -->
-                <span>Todas as provas</span>
+<!-- Botão hambúrguer (aparece só no celular quando o painel está fechado) -->
+<button class="mobile-hamburger" mat-fab color="primary" *ngIf="isHandset && !panelOpen" (click)="panelOpen = true"
+  aria-label="Abrir painel">
+  <span class="material-symbols-outlined">menu</span>
+</button>
 
-                <span class="material-symbols-outlined">
-                    keyboard_arrow_right
-                </span>
+<!-- Fundo (scrim) para fechar ao toque (só no celular quando aberto) -->
+<div class="scrim" *ngIf="isHandset && panelOpen" (click)="panelOpen = false"></div>
 
-            </div>
-        </div>
+<!-- Painel -->
+<div class="left-panel-container" [class.is-overlay]="isHandset" [class.is-open]="!isHandset || panelOpen">
+  <div class="panel-header">
+    <span class="material-symbols-outlined logo">assignment</span>
+    <span class="panel-title">Painel</span>
 
-         <div class="list-item-contaier">
-            <div class="list-item" routerLink="nova-prova" matTooltip="Nova prova">
-                <!-- <span class="material-symbols-outlined">
-                    new_window
-                </span> -->
-                <span>Nova prova</span>
+    <!-- Botão fechar (só celular) -->
+    <button mat-icon-button class="close-btn" *ngIf="isHandset" (click)="panelOpen = false" aria-label="Fechar painel">
+      <span class="material-symbols-outlined">close</span>
+    </button>
+  </div>
 
-                <span class="material-symbols-outlined">
-                    keyboard_arrow_right
-                </span>
+  <div class="panel-list">
 
-            </div>
-        </div>
-    </div>
+    <a class="list-item-container" routerLink="nova-prova" routerLinkActive="active"
+      [routerLinkActiveOptions]="{ exact: true }" matTooltip="Nova prova"
+      (click)="isHandset ? panelOpen = false : null">
+      <span class="material-symbols-outlined li-icon">note_add</span>
+      <span class="li-text">Nova prova</span>
+      <span class="material-symbols-outlined chev">chevron_right</span>
+    </a>
+
+    <a class="list-item-container" routerLink="todas-prova" routerLinkActive="active"
+      [routerLinkActiveOptions]="{ exact: true }" matTooltip="Provas criadas"
+      (click)="isHandset ? panelOpen = false : null">
+      <span class="material-symbols-outlined li-icon">folder_open</span>
+      <span class="li-text">Provas criadas</span>
+      <span class="material-symbols-outlined chev">chevron_right</span>
+    </a>
+
+    <a class="list-item-container" routerLink="resultado-prova" routerLinkActive="active"
+      [routerLinkActiveOptions]="{ exact: true }" matTooltip="Resultados prova"
+      (click)="isHandset ? panelOpen = false : null">
+      <span class="material-symbols-outlined li-icon">note_add</span>
+      <span class="li-text">Resultados prova</span>
+      <span class="material-symbols-outlined chev">chevron_right</span>
+    </a>
+
+
+  </div>
 </div>

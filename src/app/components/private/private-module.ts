@@ -15,6 +15,12 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { AnswerExam } from './answer-exam/answer-exam';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatRadioModule } from '@angular/material/radio';
+import {MatSidenavModule} from '@angular/material/sidenav';
+import {MatToolbarModule} from '@angular/material/toolbar';
+import { MatListModule } from '@angular/material/list';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { LayoutModule } from '@angular/cdk/layout';
+import { ExamResults } from './exam-results/exam-results';
 
 
 @NgModule({
@@ -23,7 +29,8 @@ import { MatRadioModule } from '@angular/material/radio';
     LeftPanel,
     NewExam,
     AllExam,
-    AnswerExam
+    AnswerExam,
+    ExamResults
   ],
   imports: [
     CommonModule,
@@ -36,7 +43,13 @@ import { MatRadioModule } from '@angular/material/radio';
     FormsModule,
     MatDividerModule,
     ReactiveFormsModule,
-    MatRadioModule
+    MatRadioModule,
+    MatSidenavModule,
+    MatToolbarModule,
+    MatListModule,    
+    MatTooltipModule,
+    LayoutModule,
+    
   ]
 })
 export class PrivateModule { }

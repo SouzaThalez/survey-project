@@ -1,21 +1,160 @@
 .left-panel-container {
-    height: 100%;
-    background-color: #e7e7e7;
-    width: 150px;
+  --panel-w: 240px;
+  --panel-bg: #ffffff;
+  --panel-border: #e6e9ef;
 
-    .panel-list {
-       .list-item-contaier{
-            padding: 10px;
-            cursor: pointer;
-            &:hover{
-                background-color: rgb(194, 194, 194);
-            }
-         .list-item {
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-            justify-content: space-around;
-        }
-       }
+  width: var(--panel-w);
+  min-height: 100%;
+  background: var(--panel-bg);
+  border-right: 1px solid var(--panel-border);
+  display: flex;
+  flex-direction: column;
+
+  .panel-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+
+    .logo {
+      color: #3f51b5;
+      font-size: 22px;
+      line-height: 1;
     }
+    .panel-title {
+      font-weight: 700;
+      color: #1f2937;
+      font-size: 16px;
+    }
+  }
+
+  .panel-list {
+    display: grid;
+    padding: 6px;
+
+    .list-item-container {
+      display: grid;
+      grid-template-columns: 28px 1fr 20px;
+      align-items: center;
+      gap: 8px;
+      margin: 4px 6px;
+      padding: 10px;
+      border-radius: 10px;
+      color: inherit;
+      text-decoration: none;
+      transition: background .15s ease, color .15s ease;
+
+      .li-icon {
+        color: #3f51b5;
+        font-size: 20px;
+      }
+      .li-text {
+        font-weight: 500;
+        color: #1f2937;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .chev {
+        color: #64748b;
+        font-size: 18px;
+        justify-self: end;
+        opacity: .6;
+      }
+
+      &:hover {
+        background: #f3f5fb;
+      }
+      &.active {
+        background: #e9eefc;
+        .chev { opacity: 1; }
+      }
+    }
+  }
+
+  /* ====== Estado colapsado (opcional) ======
+     Adicione a classe .is-collapsed na div .left-panel-container
+     para mostrar somente ícones (por ex. em telas menores) */
+  &.is-collapsed {
+    width: 68px;
+
+    .panel-header {
+      justify-content: center;
+      .panel-title { display: none; }
+    }
+
+    .panel-list .list-item-container {
+      grid-template-columns: 1fr; /* só ícone centralizado */
+      justify-items: center;
+
+      .li-text, .chev {
+        display: none;
+      }
+    }
+  }
+
+  &.is-overlay {
+    position: fixed;
+    top: 64px;     /* ajuste conforme altura da sua toolbar */
+    left: 0;
+    height: calc(100vh - 64px);
+    z-index: 1000;
+    box-shadow: 0 8px 24px rgba(0,0,0,.24);
+  }
+}
+/* altura da sua toolbar (ajuste se necessário) */
+:root { --topbar-h: 64px; }
+
+/* ===== NOVO: overlay e animação no mobile ===== */
+.left-panel-container.is-overlay {
+  position: fixed;
+  top: var(--topbar-h);
+  left: 0;
+  height: calc(100vh - var(--topbar-h));
+  z-index: 1000;
+  box-shadow: 0 10px 30px rgba(0,0,0,.24);
+  transform: translateX(-100%);
+  transition: transform .25s ease;
+}
+
+.left-panel-container.is-overlay.is-open {
+  transform: translateX(0);
+}
+
+/* Scrim atrás do painel (só mobile quando aberto) */
+.scrim {
+  position: fixed;
+  top: var(--topbar-h);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,.32);
+  z-index: 900;
+}
+
+/* Botão flutuante hambúrguer (só mobile quando fechado) */
+.mobile-hamburger {
+  position: fixed;
+  top: calc(8px + env(safe-area-inset-top));
+  left: 12px;
+  z-index: 1100;
+
+  .material-symbols-outlined { font-size: 22px; }
+}
+
+/* Botão fechar dentro do header do painel (só mobile) */
+.left-panel-container .panel-header .close-btn {
+  margin-left: auto;
+}
+
+/* (opcional) largura um pouco menor no mobile */
+@media (max-width: 600px) {
+  .left-panel-container { --panel-w: 220px; }
+}
+
+/* Pequenas melhorias de responsividade */
+@media (max-width: 600px) {
+  .left-panel-container {
+    --panel-w: 220px;
+  }
 }

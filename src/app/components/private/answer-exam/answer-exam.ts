@@ -112,6 +112,7 @@ export class AnswerExam implements OnInit, OnDestroy {
   }
 
   submitAnswers(): void {
+
     if (this.answersForm.invalid) {
       this.answersForm.markAllAsTouched();
       this.snack.open('Selecione uma opção para cada questão.', 'Ok', { duration: 2500 });
@@ -139,6 +140,12 @@ export class AnswerExam implements OnInit, OnDestroy {
     } catch {}
 
     this.snack.open('Respostas enviadas!', 'Ok', { duration: 2500 });
-    // Optional: navigate away or keep on page
+
+    // Navigate away to exam-results component
+     this.router.navigate(['/private/resultado-prova'], {
+      queryParams: { examId: this.examId }
+    });
+    
+    
   }
 }

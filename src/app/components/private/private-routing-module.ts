@@ -5,6 +5,7 @@ import { NewExam } from './new-exam/new-exam';
 import { AllExam } from './all-exam/all-exam';
 import { AnswerExam } from './answer-exam/answer-exam';
 import { ExamResults } from './exam-results/exam-results';
+import { UserPanel } from './user-panel/user-panel';
 
 const routes: Routes = [
   {
@@ -26,6 +27,10 @@ const routes: Routes = [
       { 
         path: 'resultado-prova', 
         component: ExamResults 
+      },
+      { 
+        path: 'painel-usuario', 
+        component: UserPanel 
       }
     ]
   }

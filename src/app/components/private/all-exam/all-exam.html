@@ -40,21 +40,24 @@
     <div class="cards" *ngIf="filtered.length; else emptyState">
       <div class="card" *ngFor="let e of filtered">
         <div class="card-header">
+
           <div class="title">{{ e.examName || 'Prova' }}</div>
           <div class="actions">
+
             <a mat-stroked-button color="primary"
                [routerLink]="['/private/responder-prova']"
                [queryParams]="{ examId: e.id }" target="_blank">
               <mat-icon>open_in_new</mat-icon>
               Responder
             </a>
-            <button mat-button (click)="copyLink(e)">
-              <mat-icon>link</mat-icon>
-              Copiar link
-            </button>
-            <button mat-icon-button color="warn" (click)="deleteOne(e.id)" matTooltip="Excluir prova">
+             <a mat-stroked-button
+               class="btn-remove"
+               (click)="deleteOne(e.id)" 
+               matTooltip="Excluir prova">
               <mat-icon>delete</mat-icon>
-            </button>
+              Remover
+            </a>
+          
           </div>
         </div>
 
@@ -72,6 +75,12 @@
           </div>
         </div>
 
+        <div class="copy-link">
+             <button mat-button (click)="copyLink(e)">
+              <mat-icon>link</mat-icon>
+              Copiar link
+            </button>
+        </div>
         <div class="case">
           <div class="case-title">Caso clínico</div>
           <div class="case-text">{{ e.clinicalCase }}</div>

@@ -21,6 +21,7 @@ import { MatListModule } from '@angular/material/list';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { LayoutModule } from '@angular/cdk/layout';
 import { ExamResults } from './exam-results/exam-results';
+import { UserPanel } from './user-panel/user-panel';
 
 
 @NgModule({
@@ -30,7 +31,8 @@ import { ExamResults } from './exam-results/exam-results';
     NewExam,
     AllExam,
     AnswerExam,
-    ExamResults
+    ExamResults,
+    UserPanel
   ],
   imports: [
     CommonModule,

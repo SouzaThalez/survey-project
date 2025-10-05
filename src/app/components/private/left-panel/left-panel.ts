@@ -1,41 +1,60 @@
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
-import { Component } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-left-panel',
   standalone: false,
   templateUrl: './left-panel.html',
-   styleUrls: ['./left-panel.scss'] 
+  styleUrls: ['./left-panel.scss']
 })
-export class LeftPanel {
-   isHandset = false;
-  panelOpen = true; // desktop: abre; mobile: fecha (ajustado no ngOnInit)
+export class LeftPanel implements OnInit, OnDestroy {
+  private readonly COLLAPSE_KEY = 'leftPanelCollapsed';
+  private subs: Subscription[] = [];
 
-  private sub?: Subscription;
+  isHandset = false;   // true em telefones (overlay)
+  isNarrow = false;    // true quando width <= 800px
+  panelOpen = true;    // só relevante no handset overlay
+  collapsed = false;   // recolhido (não-handset)
 
   constructor(private bp: BreakpointObserver) {}
 
   ngOnInit(): void {
-    this.sub = this.bp.observe([Breakpoints.Handset]).subscribe(state => {
-      this.isHandset = state.matches;
-      // comportamento: no mobile inicia fechado; no desktop aberto
-      this.panelOpen = this.isHandset ? false : true;
-    });
+    // Handset: usa overlay e inicia fechado
+    this.subs.push(
+      this.bp.observe([Breakpoints.Handset]).subscribe(state => {
+        this.isHandset = state.matches;
+        if (this.isHandset) {
+          this.panelOpen = false; // overlay fechado por padrão
+        }
+      })
+    );
+
+    // Largura <= 800px: recolhe por padrão (se usuário não tiver preferência)
+    this.subs.push(
+      this.bp.observe(['(max-width: 800px)']).subscribe(state => {
+        this.isNarrow = state.matches;
+
+        const stored = localStorage.getItem(this.COLLAPSE_KEY);
+        if (stored !== null) {
+          // respeita a preferência do usuário
+          this.collapsed = stored === 'true';
+        } else {
+          // sem preferência salva: padrão é recolher quando <= 800px
+          this.collapsed = this.isNarrow;
+        }
+      })
+    );
   }
 
   ngOnDestroy(): void {
-    this.sub?.unsubscribe();
+    this.subs.forEach(s => s.unsubscribe());
   }
 
-  togglePanel(): void {
-    this.panelOpen = !this.panelOpen;
-  }
-
-  // Fecha ao clicar no conteúdo/scrim quando estiver no mobile
-  closeOnHandset(): void {
-    if (this.isHandset && this.panelOpen) {
-      this.panelOpen = false;
-    }
+  toggleCollapsed(): void {
+    this.collapsed = !this.collapsed;
+    try {
+      localStorage.setItem(this.COLLAPSE_KEY, String(this.collapsed));
+    } catch { /* ignore */ }
   }
 }

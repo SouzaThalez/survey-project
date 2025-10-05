@@ -1,3 +1,5 @@
+:root { --topbar-h: 64px; }
+
 .left-panel-container {
   --panel-w: 240px;
   --panel-bg: #ffffff;
@@ -20,11 +22,23 @@
       color: #3f51b5;
       font-size: 22px;
       line-height: 1;
+      flex-shrink: 0;
     }
     .panel-title {
       font-weight: 700;
       color: #1f2937;
       font-size: 16px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .close-btn {
+      margin-left: auto;
+    }
+
+    .collapse-btn {
+      margin-left: auto;
     }
   }
 
@@ -72,20 +86,24 @@
     }
   }
 
-  /* ====== Estado colapsado (opcional) ======
-     Adicione a classe .is-collapsed na div .left-panel-container
-     para mostrar somente ícones (por ex. em telas menores) */
+  /* ===== MODO RECOLHIDO (não-handset) ===== */
   &.is-collapsed {
-    width: 68px;
+    /* mantém título + ícone, mas encolhe bastante */
+    --panel-w: 140px;
 
     .panel-header {
       justify-content: center;
-      .panel-title { display: none; }
+      gap: 8px;
+
+      .panel-title {
+        max-width: 84px; /* cabe 'Painel' e textos curtos */
+      }
     }
 
     .panel-list .list-item-container {
-      grid-template-columns: 1fr; /* só ícone centralizado */
+      grid-template-columns: 1fr; /* centraliza ícones */
       justify-items: center;
+      padding: 10px 8px;
 
       .li-text, .chev {
         display: none;
@@ -93,32 +111,21 @@
     }
   }
 
+  /* ===== OVERLAY (handset) ===== */
   &.is-overlay {
     position: fixed;
-    top: 64px;     /* ajuste conforme altura da sua toolbar */
+    top: var(--topbar-h);
     left: 0;
-    height: calc(100vh - 64px);
+    height: calc(100vh - var(--topbar-h));
     z-index: 1000;
-    box-shadow: 0 8px 24px rgba(0,0,0,.24);
+    box-shadow: 0 10px 30px rgba(0,0,0,.24);
+    transform: translateX(-100%);
+    transition: transform .25s ease;
+    --panel-w: 240px; /* overlay mais largo é ok */
   }
-}
-/* altura da sua toolbar (ajuste se necessário) */
-:root { --topbar-h: 64px; }
-
-/* ===== NOVO: overlay e animação no mobile ===== */
-.left-panel-container.is-overlay {
-  position: fixed;
-  top: var(--topbar-h);
-  left: 0;
-  height: calc(100vh - var(--topbar-h));
-  z-index: 1000;
-  box-shadow: 0 10px 30px rgba(0,0,0,.24);
-  transform: translateX(-100%);
-  transition: transform .25s ease;
-}
-
-.left-panel-container.is-overlay.is-open {
-  transform: translateX(0);
+  &.is-overlay.is-open {
+    transform: translateX(0);
+  }
 }
 
 /* Scrim atrás do painel (só mobile quando aberto) */
@@ -142,19 +149,7 @@
   .material-symbols-outlined { font-size: 22px; }
 }
 
-/* Botão fechar dentro do header do painel (só mobile) */
-.left-panel-container .panel-header .close-btn {
-  margin-left: auto;
-}
-
-/* (opcional) largura um pouco menor no mobile */
+/* (opcional) leve ajuste em telas muito pequenas */
 @media (max-width: 600px) {
   .left-panel-container { --panel-w: 220px; }
-}
-
-/* Pequenas melhorias de responsividade */
-@media (max-width: 600px) {
-  .left-panel-container {
-    --panel-w: 220px;
-  }
 }

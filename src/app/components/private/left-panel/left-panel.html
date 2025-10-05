@@ -8,19 +8,27 @@
 <div class="scrim" *ngIf="isHandset && panelOpen" (click)="panelOpen = false"></div>
 
 <!-- Painel -->
-<div class="left-panel-container" [class.is-overlay]="isHandset" [class.is-open]="!isHandset || panelOpen">
+<div class="left-panel-container" [class.is-overlay]="isHandset" [class.is-open]="!isHandset || panelOpen"
+  [class.is-collapsed]="!isHandset && collapsed" [attr.aria-expanded]="!isHandset ? !collapsed : panelOpen">
+
   <div class="panel-header">
     <span class="material-symbols-outlined logo">assignment</span>
     <span class="panel-title">Painel</span>
 
-    <!-- Botão fechar (só celular) -->
+    <!-- Fechar (só celular/overlay) -->
     <button mat-icon-button class="close-btn" *ngIf="isHandset" (click)="panelOpen = false" aria-label="Fechar painel">
       <span class="material-symbols-outlined">close</span>
+    </button>
+
+    <!-- Alternar recolhido/aberto (não-handset) -->
+    <button mat-icon-button class="collapse-btn" *ngIf="!isHandset" (click)="toggleCollapsed()"
+      [matTooltip]="collapsed ? 'Expandir painel' : 'Recolher painel'"
+      [attr.aria-label]="collapsed ? 'Expandir painel' : 'Recolher painel'">
+      <span class="material-symbols-outlined">{{ collapsed ? 'chevron_right' : 'chevron_left' }}</span>
     </button>
   </div>
 
   <div class="panel-list">
-
     <a class="list-item-container" routerLink="nova-prova" routerLinkActive="active"
       [routerLinkActiveOptions]="{ exact: true }" matTooltip="Nova prova"
       (click)="isHandset ? panelOpen = false : null">
@@ -40,11 +48,18 @@
     <a class="list-item-container" routerLink="resultado-prova" routerLinkActive="active"
       [routerLinkActiveOptions]="{ exact: true }" matTooltip="Resultados prova"
       (click)="isHandset ? panelOpen = false : null">
-      <span class="material-symbols-outlined li-icon">note_add</span>
+      <span class="material-symbols-outlined li-icon">print</span>
       <span class="li-text">Resultados prova</span>
       <span class="material-symbols-outlined chev">chevron_right</span>
     </a>
 
+    <a class="list-item-container" routerLink="painel-usuario" routerLinkActive="active"
+      [routerLinkActiveOptions]="{ exact: true }" matTooltip="Painel Usuários"
+      (click)="isHandset ? panelOpen = false : null">
+      <span class="material-symbols-outlined li-icon">group</span>
+      <span class="li-text">Painel de Usuários</span>
+      <span class="material-symbols-outlined chev">chevron_right</span>
+    </a>
 
   </div>
 </div>

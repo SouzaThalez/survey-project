@@ -1,0 +1,121 @@
+<div class="answer-page">
+  <div class="paper">
+    <h1 class="title">Usuários</h1>
+
+    <p class="disclaimer">
+      Cadastre novos usuários e visualize a lista ao lado. Os dados são salvos localmente (apenas para testes).
+    </p>
+
+    <mat-divider></mat-divider>
+
+    <!-- Dois cards: criar (esquerda) e listar (direita) -->
+    <div class="grid-2">
+      <!-- Card: Criar usuário -->
+      <form class="card user-form" [formGroup]="form" (ngSubmit)="createUser()">
+        <h2 class="section-title">
+          <mat-icon>person_add</mat-icon>
+          Novo usuário
+        </h2>
+
+        <div class="row2">
+          <mat-form-field appearance="outline">
+            <mat-label>Primeiro nome</mat-label>
+            <input matInput formControlName="firstName" />
+            <mat-error *ngIf="form.controls.firstName.touched && form.controls.firstName.invalid">
+              Campo obrigatório.
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Sobrenome</mat-label>
+            <input matInput formControlName="lastName" />
+            <mat-error *ngIf="form.controls.lastName.touched && form.controls.lastName.invalid">
+              Campo obrigatório.
+            </mat-error>
+          </mat-form-field>
+        </div>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Email</mat-label>
+          <input matInput formControlName="email" type="email" />
+          <mat-error *ngIf="form.controls.email.touched && form.controls.email.invalid">
+            Informe um email válido.
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Senha</mat-label>
+          <input matInput [type]="showPass ? 'text' : 'password'" formControlName="password" />
+          <button mat-icon-button type="button" matSuffix (click)="showPass = !showPass" [attr.aria-label]="showPass ? 'Ocultar senha' : 'Mostrar senha'">
+            <mat-icon>{{ showPass ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
+          <mat-error *ngIf="form.controls.password.touched && form.controls.password.invalid">
+            Mínimo de 6 caracteres.
+          </mat-error>
+        </mat-form-field>
+
+        <div class="actions">
+          <button mat-stroked-button color="primary" type="submit">
+            <mat-icon>check</mat-icon>
+            Criar
+          </button>
+          <button mat-button type="button" (click)="form.reset()">
+            <mat-icon>refresh</mat-icon>
+            Limpar
+          </button>
+        </div>
+
+        <!-- Stats iguais ao estilo da página de resultados -->
+        <div class="stats-row">
+          <div class="stat">
+            <div class="label">Total</div>
+            <div class="value">{{ users.length }}</div>
+          </div>
+          <div class="stat">
+            <div class="label">Emails únicos</div>
+            <div class="value">{{ uniqueEmails }}</div>
+          </div>
+          <div class="stat">
+            <div class="label">Último cadastro</div>
+            <div class="value">{{ lastCreatedAt ? (lastCreatedAt | date:'short') : '—' }}</div>
+          </div>
+        </div>
+      </form>
+
+      <!-- Card: Lista de usuários -->
+      <div class="card list">
+        <h2 class="section-title">
+          <mat-icon>group</mat-icon>
+          Lista de usuários
+        </h2>
+
+        <div class="empty" *ngIf="!users.length">
+          <p>Nenhum usuário cadastrado ainda.</p>
+        </div>
+
+        <div class="user-list" *ngIf="users.length">
+          <div class="user-row" *ngFor="let u of users; trackBy: trackByUser">
+            <div class="left">
+              <div class="avatar">{{ initials(u) }}</div>
+              <div class="info">
+                <div class="name">{{ u.firstName }} {{ u.lastName }}</div>
+                <div class="email">{{ u.email }}</div>
+                <div class="date">Criado em {{ u.createdAt | date:'short' }}</div>
+              </div>
+            </div>
+            <div class="right">
+              <button mat-icon-button matTooltip="Copiar email" (click)="copyEmail(u.email)">
+                <mat-icon>content_copy</mat-icon>
+              </button>
+              <button mat-icon-button color="warn" matTooltip="Remover" (click)="removeUser(u.id)">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>

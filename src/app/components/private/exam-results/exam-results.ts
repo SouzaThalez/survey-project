@@ -184,7 +184,7 @@ export class ExamResults implements OnInit {
       <span class="chip">Questões: ${exam.questions.length || exam.questionsCount || 0}</span>
       <span class="chip">Resultado: ${sub.total} / ${exam.totalPoints} (${resultadoPct})</span>
     </div>
-    <h3>Orientações</h3>
+    <h3>Regras e Orientações</h3>
     <div class="case">${this.escapeHtml(exam.examRules || '')}</div>
     <h3>Caso Clínico</h3>
     <div class="case">${this.escapeHtml(exam.clinicalCase || '')}</div>

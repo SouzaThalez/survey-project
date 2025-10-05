@@ -3,19 +3,23 @@
     <h1 class="title">{{ e.examName || 'Prova' }}</h1>
 
     <p class="disclaimer">
-      
-      Antes de enviar este formulário, leia atentamente as orientações da prova abaixo. Após o envio, a nota será final e não poderá ser alterada.
-      <ng-container *ngIf="e.examRules">
-        <br>
-        <strong>Regras e orientações: </strong>
-        <span class="rules-text">{{ e.examRules }}</span>
-      </ng-container>
+
+      Antes de enviar este formulário, leia atentamente as orientações da prova abaixo. Após o envio, a nota será final
+      e não poderá ser alterada.
+
     </p>
 
     <mat-divider></mat-divider>
 
     <div class="case-block">
-      <div class="required">* Obrigatória</div>
+      <div class="required">Regras e orientações</div>
+      <div class="case-text">
+        <ng-container *ngIf="e.examRules">
+          <span class="rules-text">{{ e.examRules }}</span>
+        </ng-container>
+      </div>
+    </div>
+    <div class="case-block">
       <h2 class="case-title">Caso clínico</h2>
       <p class="case-text">{{ e.clinicalCase }}</p>
     </div>

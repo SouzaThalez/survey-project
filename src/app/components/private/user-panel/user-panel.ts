@@ -2,13 +2,16 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
+type Role = 'Professor' | 'admin';
+
 type User = {
   id: number;
   createdAt: string;
   firstName: string;
   lastName: string;
   email: string;
-  password: string; // ⚠️ Apenas para testes — não salve senhas em texto puro em produção.
+  password: string; // apenas para teste local
+  role: Role;
 };
 
 type UserForm = FormGroup<{
@@ -16,6 +19,7 @@ type UserForm = FormGroup<{
   lastName: FormControl<string | null>;
   email: FormControl<string | null>;
   password: FormControl<string | null>;
+  role: FormControl<Role | null>;
 }>;
 
 @Component({
@@ -31,26 +35,30 @@ export class UserPanel implements OnInit {
   users: User[] = [];
   showPass = false;
 
-  constructor(private fb: FormBuilder, private snack: MatSnackBar) {}
+  roles = [
+    { value: 'Professor' as Role, label: 'Professor' },
+    { value: 'admin' as Role, label: 'Admin' },
+  ];
+
+  constructor(private fb: FormBuilder, private snack: MatSnackBar) {
+    this.form = this.fb.nonNullable.group({
+      firstName: this.fb.control<string | null>(null, [Validators.required, Validators.minLength(2)]),
+      lastName: this.fb.control<string | null>(null, [Validators.required, Validators.minLength(2)]),
+      email: this.fb.control<string | null>(null, [Validators.required, Validators.email]),
+      password: this.fb.control<string | null>(null, [Validators.required, Validators.minLength(6)]),
+      role: this.fb.control<Role | null>(null, [Validators.required]),
+    }) as UserForm;
+  }
 
   ngOnInit(): void {
-    this.form = this.fb.nonNullable.group({
-      firstName: this.fb.control<string | null>(null, Validators.required),
-      lastName: this.fb.control<string | null>(null, Validators.required),
-      email: this.fb.control<string | null>(null, [Validators.required, Validators.email]),
-      password: this.fb.control<string | null>(null, [Validators.required, Validators.minLength(6)])
-    });
-
     this.load();
   }
 
-  // Persistência local
+  // Storage
   private load(): void {
     try {
       const raw = localStorage.getItem(this.STORAGE_KEY);
       this.users = raw ? JSON.parse(raw) : [];
-      // mais recente primeiro
-      this.users.sort((a, b) => b.id - a.id);
     } catch {
       this.users = [];
     }
@@ -59,7 +67,7 @@ export class UserPanel implements OnInit {
   private persist(): void {
     try {
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.users));
-    } catch {}
+    } catch { }
   }
 
   // Ações
@@ -70,78 +78,68 @@ export class UserPanel implements OnInit {
       return;
     }
 
-    const values = this.form.getRawValue();
-
-    // Evita duplicidade simples por email
-    const exists = this.users.some(u => u.email.toLowerCase().trim() === (values.email || '').toLowerCase().trim());
-    if (exists) {
-      this.snack.open('Já existe um usuário com este email.', 'Ok', { duration: 2500 });
-      return;
-    }
-
+    const v = this.form.getRawValue();
     const user: User = {
       id: Date.now(),
       createdAt: new Date().toISOString(),
-      firstName: values.firstName!.trim(),
-      lastName: values.lastName!.trim(),
-      email: values.email!.trim(),
-      password: values.password! // ⚠️ não faça isso em produção
+      firstName: v.firstName!.trim(),
+      lastName: v.lastName!.trim(),
+      email: (v.email || '').trim().toLowerCase(),
+      password: v.password || '',
+      role: v.role as Role,
     };
 
     this.users.unshift(user);
     this.persist();
+    this.snack.open('Usuário criado!', 'Ok', { duration: 2000 });
     this.form.reset();
-    this.snack.open('Usuário criado!', 'Ok', { duration: 2200 });
   }
 
   removeUser(id: number): void {
     this.users = this.users.filter(u => u.id !== id);
     this.persist();
-    this.snack.open('Usuário removido.', 'Ok', { duration: 2000 });
+    this.snack.open('Usuário removido.', 'Ok', { duration: 1500 });
   }
 
   copyEmail(email: string): void {
-    if (navigator.clipboard?.writeText) {
+    if (navigator?.clipboard?.writeText) {
       navigator.clipboard.writeText(email).then(
-        () => this.snack.open('Email copiado!', 'Ok', { duration: 1500 }),
-        () => this.fallbackCopy(email)
+        () => this.snack.open('E-mail copiado!', 'Ok', { duration: 1500 }),
+        () => this.snack.open('Não foi possível copiar.', 'Ok', { duration: 1500 })
       );
     } else {
-      this.fallbackCopy(email);
+      // fallback simples
+      const ok = window.prompt('Copie o e-mail:', email) !== null;
+      if (ok) this.snack.open('E-mail copiado!', 'Ok', { duration: 1500 });
     }
   }
 
-  private fallbackCopy(text: string): void {
-    try {
-      const ta = document.createElement('textarea');
-      ta.value = text;
-      ta.style.position = 'fixed';
-      ta.style.opacity = '0';
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand('copy');
-      document.body.removeChild(ta);
-      this.snack.open('Email copiado!', 'Ok', { duration: 1500 });
-    } catch {
-      this.snack.open('Não foi possível copiar.', 'Ok', { duration: 2000 });
-    }
-  }
-
-  // Helpers de UI
+  // Helpers / stats
   get uniqueEmails(): number {
-    const set = new Set(this.users.map(u => u.email.toLowerCase().trim()));
-    return set.size;
+    return new Set(this.users.map(u => u.email)).size;
   }
 
-  get lastCreatedAt(): string | undefined {
-    return this.users.length ? this.users[0].createdAt : undefined;
+  get lastCreatedAt(): string | null {
+    if (!this.users.length) return null;
+    return this.users[0].createdAt;
   }
+
+  get professoresCount(): number {
+    return this.users.filter(u => (u.role ?? '').toLowerCase() === 'professor').length;
+  }
+
+  get adminsCount(): number {
+    return this.users.filter(u => (u.role ?? '').toLowerCase() === 'admin').length;
+  }
+
+
+
 
   initials(u: User): string {
     const a = (u.firstName || '').trim().charAt(0).toUpperCase();
     const b = (u.lastName || '').trim().charAt(0).toUpperCase();
     return `${a}${b}` || 'U';
-    }
+  }
 
   trackByUser = (_: number, u: User) => u.id;
 }

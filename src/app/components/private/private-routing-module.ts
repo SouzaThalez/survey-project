@@ -30,7 +30,7 @@ const routes: Routes = [
       },
       { 
         path: 'painel-usuario', 
-        component: UserPanel 
+        component: UserPanel
       }
     ]
   }

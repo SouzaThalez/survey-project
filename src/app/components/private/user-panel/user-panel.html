@@ -54,6 +54,18 @@
           </mat-error>
         </mat-form-field>
 
+        <!-- SELECT DE PERFIL (já existente) -->
+        <mat-form-field appearance="outline">
+          <mat-label>Perfil</mat-label>
+          <mat-select formControlName="role" required>
+            <mat-option value="Professor">Professor</mat-option>
+            <mat-option value="admin">Admin</mat-option>
+          </mat-select>
+          <mat-error *ngIf="form.controls.role.touched && form.controls.role.invalid">
+            Selecione um perfil.
+          </mat-error>
+        </mat-form-field>
+
         <div class="actions">
           <button mat-stroked-button color="primary" type="submit">
             <mat-icon>check</mat-icon>
@@ -65,19 +77,19 @@
           </button>
         </div>
 
-        <!-- Stats iguais ao estilo da página de resultados -->
+        <!-- STATS: Usuários cadastrados / Professores / Admin -->
         <div class="stats-row">
           <div class="stat">
-            <div class="label">Total</div>
+            <div class="label">Usuários cadastrados</div>
             <div class="value">{{ users.length }}</div>
           </div>
           <div class="stat">
-            <div class="label">Emails únicos</div>
-            <div class="value">{{ uniqueEmails }}</div>
+            <div class="label">Professores</div>
+            <div class="value">{{ professoresCount }}</div>
           </div>
           <div class="stat">
-            <div class="label">Último cadastro</div>
-            <div class="value">{{ lastCreatedAt ? (lastCreatedAt | date:'short') : '—' }}</div>
+            <div class="label">Admin</div>
+            <div class="value">{{ adminsCount }}</div>
           </div>
         </div>
       </form>
@@ -100,7 +112,8 @@
               <div class="info">
                 <div class="name">{{ u.firstName }} {{ u.lastName }}</div>
                 <div class="email">{{ u.email }}</div>
-                <div class="date">Criado em {{ u.createdAt | date:'short' }}</div>
+                <!-- TROCA: no lugar de 'Criado em ...', mostrar o perfil -->
+                <div class="date">Perfil: {{ u.role }}</div>
               </div>
             </div>
             <div class="right">

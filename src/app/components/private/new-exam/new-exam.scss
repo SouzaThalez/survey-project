@@ -37,13 +37,21 @@
     gap: 12px;
   }
 
+  /* === LADO ESQUERDO + DIREITO (formulários) === */
   .page-container {
-    grid-template-columns: 1.1fr 1fr;
+    grid-template-columns: 1.1fr 1fr; /* desktop */
+
     align-items: start;
 
     .form {
       display: grid;
       gap: 10px;
+
+      /* garante que os mat-form-field ocupem toda a largura */
+      ::ng-deep .mat-form-field,
+      .mat-form-field {
+        width: 100%;
+      }
 
       .text-area {
         min-height: 230px;
@@ -73,8 +81,20 @@
         font-weight: 600;
       }
     }
+
+    .share {
+      grid-column: 1 / -1;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+
+      a {
+        color: #3f51b5;
+        text-decoration: underline;
+      }
+    }
   }
 
+  /* === CARTÕES DAS QUESTÕES === */
   .exam-container {
     .header .clinic-case {
       padding: 8px 10px;
@@ -83,11 +103,15 @@
       border-radius: 10px;
       line-height: 1.5;
       color: #2d3643;
+      /* garante quebra em telas estreitas */
+      white-space: pre-wrap;
+      word-break: break-word;
     }
 
     .exam-container-body {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      /* Responsivo automático: define a “largura mínima” confortável de cada cartão */
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
       gap: 16px;
 
       .question-field {
@@ -107,59 +131,58 @@
             font-weight: 700;
             color: #1b2636;
           }
-
-          .q-score {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-
-            span {
-              color: #6a7482;
-              font-size: 13px;
-            }
-
-            .note-field {
-              width: 96px;
-              padding: 6px 8px;
-              border-radius: 8px;
-              border: 1px solid #cfd6e0;
-              outline: none;
-
-              &:focus {
-                border-color: #3f51b5;
-                box-shadow: 0 0 0 3px rgba(63, 81, 181, 0.12);
-              }
-            }
-          }
         }
 
-      }
-    }
-
-    /* Tablet */
-    @media (max-width: 1024px) {
-      .exam-container-body {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
-
-    /* Mobile */
-    @media (max-width: 600px) {
-      .exam-container-body {
-        grid-template-columns: 1fr;
+        ::ng-deep .mat-form-field,
+        .mat-form-field {
+          width: 100%;
+        }
       }
     }
   }
 
-  /* Stack on small screens */
-  @media (max-width: 960px) {
+  /* === RESPONSIVIDADE === */
+
+  /* Tablet/portrait ~800px: força empilhar colunas do form
+     e deixa as questões fluírem no auto-fit (2 colunas cabem) */
+  @media (max-width: 900px) {
     .page-container {
       grid-template-columns: 1fr;
       .form.text-area-form { margin-left: 0; }
     }
   }
+
+  /* Celular: cartões 1 por linha (já acontece pelo minmax 280px se a tela for estreita),
+     mas garantimos melhor espaçamento */
+  @media (max-width: 600px) {
+    .page-container {
+      padding: 12px;
+    }
+    .exam-container .exam-container-body {
+      gap: 12px;
+    }
+  }
 }
 
+/* ======== ÁREA DE OPÇÕES GLOBAIS ======== */
+.global-options {
+  display: grid;
+  gap: 10px;
+  /* cada campo tenta ter no mínimo 140px e se ajusta responsivamente */
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+
+  /* usamos “contents” para que cada form-field ocupe a célula por si só */
+  .option-row {
+    display: contents;
+  }
+
+  .option-points,
+  ::ng-deep .mat-form-field {
+    width: 100%;
+  }
+}
+
+/* (apenas legado, se estiver usando esse bloco em outro lugar) */
 .options {
   display: grid;
   gap: 8px;
@@ -167,7 +190,7 @@
 
   .option-row {
     display: grid;
-    grid-template-columns: 1fr 130px; /* nome | pontos */
+    grid-template-columns: 1fr 130px;
     gap: 8px;
 
     .option-name, .option-points { width: 100%; }
@@ -178,9 +201,4 @@
   .options .option-row {
     grid-template-columns: 1fr 120px;
   }
-}
-
-.global-options {
-    display: flex;
-    gap: 10px;
 }

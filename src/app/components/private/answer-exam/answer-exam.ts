@@ -14,6 +14,7 @@ type GeneratedExam = {
   questionsCount: number | null;
   clinicalCase: string | null;
   totalPoints: number;
+  examRules: string | null; // <<< NOVO
   questions: GeneratedQuestion[];
   shareUrl: string;
 };
@@ -112,14 +113,12 @@ export class AnswerExam implements OnInit, OnDestroy {
   }
 
   submitAnswers(): void {
-
     if (this.answersForm.invalid) {
       this.answersForm.markAllAsTouched();
       this.snack.open('Selecione uma opção para cada questão.', 'Ok', { duration: 2500 });
       return;
     }
 
-    // Persist a lightweight response if you want to list later
     const payload = {
       examId: this.examId,
       submittedAt: new Date().toISOString(),
@@ -141,11 +140,8 @@ export class AnswerExam implements OnInit, OnDestroy {
 
     this.snack.open('Respostas enviadas!', 'Ok', { duration: 2500 });
 
-    // Navigate away to exam-results component
-     this.router.navigate(['/private/resultado-prova'], {
+    this.router.navigate(['/private/resultado-prova'], {
       queryParams: { examId: this.examId }
     });
-    
-    
   }
 }

@@ -16,6 +16,11 @@
             <mat-option value="th1">TH 1</mat-option>
             <mat-option value="th2">TH 2</mat-option>
             <mat-option value="th3">TH 3</mat-option>
+            <mat-option value="th4">TH 4</mat-option>
+            <mat-option value="th5">TH 5</mat-option>
+            <mat-option value="th6">TH 6</mat-option>
+            <mat-option value="th7">TH 7</mat-option>
+            <mat-option value="th8">TH 8</mat-option>
           </mat-select>
         </mat-form-field>
 
@@ -40,25 +45,28 @@
     <div class="cards" *ngIf="filtered.length; else emptyState">
       <div class="card" *ngFor="let e of filtered">
         <div class="card-header">
-
           <div class="title">{{ e.examName || 'Prova' }}</div>
           <div class="actions">
-
             <a mat-stroked-button color="primary"
                [routerLink]="['/private/responder-prova']"
                [queryParams]="{ examId: e.id }" target="_blank">
               <mat-icon>open_in_new</mat-icon>
               Responder
             </a>
-             <a mat-stroked-button
+            <a mat-stroked-button
                class="btn-remove"
-               (click)="deleteOne(e.id)" 
+               (click)="deleteOne(e.id)"
                matTooltip="Excluir prova">
               <mat-icon>delete</mat-icon>
               Remover
             </a>
-          
           </div>
+        </div>
+
+        <!-- NOVO: Regras e orientações da prova (logo depois do card-header) -->
+        <div class="case" *ngIf="e.examRules">
+          <div class="case-title">Regras e orientações da prova</div>
+          <div class="case-text">{{ e.examRules }}</div>
         </div>
 
         <div class="meta">
@@ -76,11 +84,12 @@
         </div>
 
         <div class="copy-link">
-             <button mat-button (click)="copyLink(e)">
-              <mat-icon>link</mat-icon>
-              Copiar link
-            </button>
+          <button mat-button (click)="copyLink(e)">
+            <mat-icon>link</mat-icon>
+            Copiar link
+          </button>
         </div>
+
         <div class="case">
           <div class="case-title">Caso clínico</div>
           <div class="case-text">{{ e.clinicalCase }}</div>

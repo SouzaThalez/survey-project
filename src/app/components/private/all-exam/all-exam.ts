@@ -10,6 +10,7 @@ type GeneratedExam = {
   skillTraining: string | null;
   questionsCount: number | null;
   clinicalCase: string | null;
+  examRules: string | null; // << NOVO CAMPO
   totalPoints: number;
   questions: GeneratedQuestion[];
   shareUrl: string;
@@ -28,7 +29,7 @@ export class AllExam implements OnInit {
 
   // UI state
   search = '';
-  trainingFilter: 'all' | 'th1' | 'th2' | 'th3' = 'all';
+ trainingFilter: 'all' | 'th1' | 'th2' | 'th3' | 'th4' | 'th5' | 'th6' | 'th7' | 'th8' = 'all';
   sortBy: 'newest' | 'oldest' | 'name' = 'newest';
 
   constructor(private snack: MatSnackBar) {}
@@ -61,14 +62,15 @@ export class AllExam implements OnInit {
       out = out.filter(e => e.skillTraining === this.trainingFilter);
     }
 
-    // search (name + case + question text)
+    // search (name + case + rules + question text)
     const q = this.search.trim().toLowerCase();
     if (q) {
       out = out.filter(e => {
         const inName = (e.examName || '').toLowerCase().includes(q);
         const inCase = (e.clinicalCase || '').toLowerCase().includes(q);
+        const inRules = (e.examRules || '').toLowerCase().includes(q);
         const inQuestions = (e.questions || []).some(qq => (qq.text || '').toLowerCase().includes(q));
-        return inName || inCase || inQuestions;
+        return inName || inCase || inRules || inQuestions;
       });
     }
 
@@ -104,6 +106,12 @@ export class AllExam implements OnInit {
       th1: 'Treinamento - 1 (TH 1)',
       th2: 'Treinamento - 2 (TH 2)',
       th3: 'Treinamento - 3 (TH 3)',
+      th4: 'Treinamento - 4 (TH 4)',
+      th5: 'Treinamento - 5 (TH 5)',
+      th6: 'Treinamento - 6 (TH 6)',
+      th7: 'Treinamento - 7 (TH 7)',
+      th8: 'Treinamento - 8 (TH 8)',
+      
     };
     return code ? (map[code] || code) : '—';
   }

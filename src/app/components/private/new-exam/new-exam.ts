@@ -18,13 +18,14 @@ type GeneratedOption = { value: number | null };
 type GeneratedQuestion = { text: string; options: GeneratedOption[]; totalPoints: number };
 
 type GeneratedExam = {
-  id: number;                 // timestamp (ms)
+  id: number;                 
   createdAt: string;          // ISO
   examName: string | null;
   skillTraining: string | null;
   questionsCount: number | null;
   clinicalCase: string | null;
   totalPoints: number;
+ examRules: string | null;
   questions: GeneratedQuestion[];
   shareUrl: string;
 };
@@ -39,6 +40,7 @@ export class NewExam implements OnInit, OnDestroy {
   private readonly STORAGE_KEY = 'generatedExams';
 
   form!: FormGroup<{
+
     examName: FormControl<string | null>;
     skillTraining: FormControl<string | null>;
     questionsCount: FormControl<number | null>;
@@ -46,6 +48,8 @@ export class NewExam implements OnInit, OnDestroy {
     globalOptions: FormArray<FormGroup<GlobalOptionGroup>>;
     clinicalCase: FormControl<string | null>;
     questions: FormArray<FormGroup<QuestionGroup>>;
+    examRules: FormControl<string>;
+
   }>;
 
   generatedExams: GeneratedExam[] = [];
@@ -56,6 +60,14 @@ export class NewExam implements OnInit, OnDestroy {
     { value: 'th1', label: 'Treinamento - 1 (TH 1)' },
     { value: 'th2', label: 'Treinamento - 2 (TH 2)' },
     { value: 'th3', label: 'Treinamento - 3 (TH 3)' },
+    
+    { value: 'th4', label: 'Treinamento - 4 (TH 4)' },
+    { value: 'th5', label: 'Treinamento - 5 (TH 5)' },
+    { value: 'th6', label: 'Treinamento - 6 (TH 6)' },
+    { value: 'th7', label: 'Treinamento - 7 (TH 7)' },
+    { value: 'th8', label: 'Treinamento - 8 (TH 8)' },
+
+    
   ];
 
   questionCountOptions = [3, 5, 10, 15];
@@ -66,13 +78,16 @@ export class NewExam implements OnInit, OnDestroy {
   constructor(private fb: FormBuilder, private snack: MatSnackBar) {
     // Create immediately so template never sees undefined
     this.form = this.fb.nonNullable.group({
+
       examName: this.fb.control<string | null>(null, [Validators.required, Validators.minLength(3)]),
       skillTraining: this.fb.control<string | null>(null, Validators.required),
       questionsCount: this.fb.control<number | null>(3, Validators.required),
       optionsCount: this.fb.control<number | null>(3, Validators.required),
       globalOptions: this.fb.array<FormGroup<GlobalOptionGroup>>([]),
       clinicalCase: this.fb.control<string | null>(null, Validators.required),
-      questions: this.fb.array<FormGroup<QuestionGroup>>([])
+      questions: this.fb.array<FormGroup<QuestionGroup>>([]),
+        examRules: this.fb.control('', { nonNullable: true, validators: [Validators.required] }),
+
     });
 
     this.loadFromStorage();
@@ -219,6 +234,7 @@ export class NewExam implements OnInit, OnDestroy {
       skillTraining: values.skillTraining,
       questionsCount: values.questionsCount,
       clinicalCase: values.clinicalCase,
+       examRules: values.examRules.trim(), 
       totalPoints,
       questions,
       shareUrl

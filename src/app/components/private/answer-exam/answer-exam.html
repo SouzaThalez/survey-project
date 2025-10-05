@@ -5,6 +5,11 @@
     <p class="disclaimer">
       Quando você enviar este formulário, ele não coletará automaticamente seus detalhes, como nome e
       endereço de email, a menos que você mesmo os forneça.
+      <ng-container *ngIf="e.examRules">
+        <br>
+        <strong>Regras e orientações: </strong>
+        <span class="rules-text">{{ e.examRules }}</span>
+      </ng-container>
     </p>
 
     <mat-divider></mat-divider>
@@ -47,7 +52,7 @@
         </div>
 
         <div class="actions">
-          <button  mat-stroked-button color="primary" type="button" (click)="submitAnswers()">
+          <button mat-stroked-button color="primary" type="button" (click)="submitAnswers()">
             Enviar respostas
             <mat-icon>send</mat-icon>
           </button>

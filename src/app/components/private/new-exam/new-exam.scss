@@ -39,7 +39,8 @@
 
   /* === LADO ESQUERDO + DIREITO (formulários) === */
   .page-container {
-    grid-template-columns: 1.1fr 1fr; /* desktop */
+    grid-template-columns: 1.1fr 1fr;
+    /* desktop */
 
     align-items: start;
 
@@ -60,6 +61,26 @@
       &.text-area-form {
         margin-left: 10px;
       }
+
+      /* ======== ÁREA DE OPÇÕES GLOBAIS ======== */
+      .global-options {
+        display: grid;
+        gap: 10px;
+        /* cada campo tenta ter no mínimo 140px e se ajusta responsivamente */
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+
+        /* usamos “contents” para que cada form-field ocupe a célula por si só */
+        .option-row {
+          display: contents;
+        }
+
+        .option-points,
+        ::ng-deep .mat-form-field {
+          width: 100%;
+        }
+      }
+
+
     }
 
     .footer {
@@ -146,9 +167,16 @@
   /* Tablet/portrait ~800px: força empilhar colunas do form
      e deixa as questões fluírem no auto-fit (2 colunas cabem) */
   @media (max-width: 900px) {
+    .page-title {
+      margin-top: 70px;
+    }
+
     .page-container {
       grid-template-columns: 1fr;
-      .form.text-area-form { margin-left: 0; }
+
+      .form.text-area-form {
+        margin-left: 0;
+      }
     }
   }
 
@@ -158,47 +186,11 @@
     .page-container {
       padding: 12px;
     }
+
     .exam-container .exam-container-body {
       gap: 12px;
     }
   }
-}
 
-/* ======== ÁREA DE OPÇÕES GLOBAIS ======== */
-.global-options {
-  display: grid;
-  gap: 10px;
-  /* cada campo tenta ter no mínimo 140px e se ajusta responsivamente */
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
 
-  /* usamos “contents” para que cada form-field ocupe a célula por si só */
-  .option-row {
-    display: contents;
-  }
-
-  .option-points,
-  ::ng-deep .mat-form-field {
-    width: 100%;
-  }
-}
-
-/* (apenas legado, se estiver usando esse bloco em outro lugar) */
-.options {
-  display: grid;
-  gap: 8px;
-  margin-top: 6px;
-
-  .option-row {
-    display: grid;
-    grid-template-columns: 1fr 130px;
-    gap: 8px;
-
-    .option-name, .option-points { width: 100%; }
-  }
-}
-
-@media (max-width: 600px) {
-  .options .option-row {
-    grid-template-columns: 1fr 120px;
-  }
 }

@@ -209,6 +209,10 @@
   }
 
   @media (max-width: 700px) {
+    .header-line{
+      padding-bottom: 10px;
+      margin-top: 45px;
+    }
     .header-line .toolbar {
       grid-template-columns: 1fr;
     }

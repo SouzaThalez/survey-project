@@ -9,12 +9,11 @@
     margin: 0 auto;
     background: #fff;
     border-radius: 12px;
-    box-shadow: 0 8px 24px rgba(0,0,0,.08);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .08);
     padding: 24px 28px;
   }
 
   .title {
-    margin: 0 0 8px;
     font-weight: 700;
   }
 
@@ -27,11 +26,10 @@
   .grid-2 {
     display: grid;
     gap: 16px;
-    grid-template-columns: 1.1fr 1fr; /* form um pouco maior */
+    grid-template-columns: 1.1fr 1fr;
+    /* form um pouco maior */
 
-    @media (max-width: 960px) {
-      grid-template-columns: 1fr; /* empilha no tablet/celular */
-    }
+
   }
 
   .card {
@@ -43,7 +41,7 @@
 
   .section-title {
     display: inline-flex;
-   
+
     gap: 8px;
     font-weight: 700;
     margin: 0 0 10px;
@@ -63,9 +61,7 @@
       gap: 10px;
       grid-template-columns: 1fr 1fr;
 
-      @media (max-width: 600px) {
-        grid-template-columns: 1fr;
-      }
+
     }
 
     .actions {
@@ -98,15 +94,14 @@
           font-size: 12px;
           margin-bottom: 4px;
         }
+
         .value {
           font-weight: 700;
           color: #111827;
         }
       }
 
-      @media (max-width: 700px) {
-        grid-template-columns: 1fr 1fr;
-      }
+
     }
   }
 
@@ -152,9 +147,21 @@
           }
 
           .info {
-            .name { font-weight: 700; color: #111827; }
-            .email { color: #374151; font-size: 13px; }
-            .date { color: #6b7280; font-size: 12px; margin-top: 2px; }
+            .name {
+              font-weight: 700;
+              color: #111827;
+            }
+
+            .email {
+              color: #374151;
+              font-size: 13px;
+            }
+
+            .date {
+              color: #6b7280;
+              font-size: 12px;
+              margin-top: 2px;
+            }
           }
         }
 
@@ -162,9 +169,43 @@
           display: inline-flex;
           gap: 6px;
 
-          button[color="warn"] mat-icon { color: #c75c5c; } /* reforço visual */
+          button[color="warn"] mat-icon {
+            color: #c75c5c;
+          }
+
+          /* reforço visual */
         }
       }
     }
   }
+
+
+
+
+  @media (max-width: 960px) {
+    .grid-2 {
+      grid-template-columns: 1fr;
+      /* empilha no tablet/celular */
+    }
+
+  }
+
+  @media (max-width: 700px) {}
+
+  @media (max-width: 600px) {
+    .paper {
+      .title {
+        margin-top: 35px;
+      }
+    }
+
+    .user-form {
+      .row2 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+  }
+
+
 }

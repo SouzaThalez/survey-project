@@ -1,0 +1,53 @@
+<div class="answer-page">
+  <div class="paper">
+    <h1 class="title">Entrar</h1>
+
+    <p class="disclaimer">
+      Acesse com seu email e senha. Para testes, você pode criar usuários em
+      <a routerLink="/private/painel-usuario">Painel de Usuários</a>.
+    </p>
+
+    <mat-divider></mat-divider>
+
+    <form class="login-form" [formGroup]="form" (ngSubmit)="signIn()">
+      <mat-form-field appearance="outline">
+        <mat-label>Email</mat-label>
+        <input matInput type="email" formControlName="email" placeholder="seu@email.com">
+        <mat-icon matPrefix>mail</mat-icon>
+        <mat-error *ngIf="form.controls.email.touched && form.controls.email.invalid">
+          Informe um email válido.
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Senha</mat-label>
+        <input matInput [type]="showPass ? 'text' : 'password'" formControlName="password" placeholder="••••••••">
+        <button mat-icon-button type="button" matSuffix (click)="showPass = !showPass"
+                [attr.aria-label]="showPass ? 'Ocultar senha' : 'Mostrar senha'">
+          <mat-icon>{{ showPass ? 'visibility_off' : 'visibility' }}</mat-icon>
+        </button>
+        <mat-error *ngIf="form.controls.password.touched && form.controls.password.invalid">
+          Mínimo de 6 caracteres.
+        </mat-error>
+      </mat-form-field>
+
+      <div class="row">
+        <mat-checkbox formControlName="remember">Lembrar-me</mat-checkbox>
+
+        <a class="link" (click)="goToUsers()">Criar conta</a>
+      </div>
+
+      <div class="actions">
+        <button mat-button type="button" (click)="form.reset()">
+          <mat-icon>refresh</mat-icon>
+          Limpar
+        </button>
+
+        <button mat-stroked-button color="primary" type="submit" [disabled]="loading || form.invalid">
+          <mat-icon>login</mat-icon>
+          Entrar
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

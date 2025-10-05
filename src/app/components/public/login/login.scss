@@ -1,0 +1,69 @@
+.answer-page {
+  background: #f2f2f2 url('/assets/bg-blur.jpg') no-repeat center/cover;
+  min-height: 100vh;
+  min-height: 100dvh; /* melhor em mobile */
+  padding: 24px;
+
+  /* REMOVIDO o grid/centro vertical */
+  /* display: grid;
+     place-items: center; */
+
+  .paper {
+    max-width: 480px; /* mais compacto p/ login */
+    width: 100%;
+    /* Centraliza na horizontal e dá respiro no topo */
+    margin: calc(56px + env(safe-area-inset-top)) auto 24px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0,0,0,.08);
+    padding: 24px 28px;
+  }
+
+  .title {
+    margin: 0 0 8px;
+    font-weight: 700;
+  }
+
+  .disclaimer {
+    color: #70757a;
+    margin: 4px 0 16px;
+
+    a.link, a {
+      color: #3f51b5;
+      text-decoration: none;
+    }
+  }
+
+  .login-form {
+    margin-top: 14px;
+    display: grid;
+    gap: 12px;
+
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      .link {
+        color: #3f51b5;
+        cursor: pointer;
+        user-select: none;
+      }
+    }
+
+    .actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 4px;
+      gap: 10px;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .paper {
+      margin: 24px auto; /* menos espaço no topo em telas pequenas */
+      padding: 20px 22px;
+    }
+  }
+}

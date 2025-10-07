@@ -12,6 +12,11 @@
     padding: 24px 28px;
   }
 
+  /* quando houver mais de uma, separa os blocos mantendo o mesmo estilo */
+  .paper + .paper {
+    margin-top: 24px;
+  }
+
   .title {
     margin: 0 0 14px;
     font-weight: 700;
@@ -86,7 +91,7 @@
     }
 
     .row-radios {
-      display: contents; // so radios can align in grid cells
+      display: contents; // para alinhar radios nas células da grid
     }
 
     .ocell {

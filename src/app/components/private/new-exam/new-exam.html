@@ -1,136 +1,166 @@
-<!-- new-exam.html -->
-<form class="page-body" [formGroup]="form">
+<form class="page-body" [formGroup]="form" (ngSubmit)="$event.preventDefault()">
   <div class="page-title">
-    <h2>Nova prova</h2>
+    <h2>Nova(s) prova(s)</h2>
   </div>
 
-  <div class="page-description">Preencha os dados e gere o modelo automaticamente.</div>
+  <div class="page-description">
+    Preencha os dados e gere um ou mais modelos automaticamente.
+  </div>
 
-  <div class="page-container">
-    <!-- Left column -->
+  <!-- Seletor de quantidade -->
+  <div class="row-start">
+    <mat-form-field appearance="outline" class="count-field">
+      <mat-label>Quantidade de provas</mat-label>
+      <mat-select formControlName="examCount">
+        <mat-option *ngFor="let n of examCountOptions" [value]="n">{{ n }}</mat-option>
+      </mat-select>
+    </mat-form-field>
 
-    <div class="form">
+    <div class="row-actions">
+      <button mat-stroked-button color="primary" type="button" (click)="generateAll()">
+        <mat-icon>library_add_check</mat-icon>
+        Gerar todas
+      </button>
+      <button mat-button type="button" color="warn" (click)="resetAll()">
+        <mat-icon>refresh</mat-icon>
+        Limpar tudo
+      </button>
+    </div>
+  </div>
 
-      <mat-form-field appearance="outline">
-        <mat-label>Nome da prova</mat-label>
-        <input matInput formControlName="examName" placeholder="Ex.: Prova de Urgência e Emergência">
-        <mat-error *ngIf="form.controls.examName.touched && form.controls.examName.invalid">
-          Informe um nome válido (mín. 3 caracteres).
-        </mat-error>
-      </mat-form-field>
+  <!-- Abas de provas -->
+  <mat-tab-group class="multi-tabs" [(selectedIndex)]="selectedIndex" *ngIf="examsArray.length">
+    <mat-tab *ngFor="let exam of examsArray.controls; let i = index" [label]="'Prova ' + (i + 1)">
 
-      <mat-form-field appearance="outline">
-        <mat-label>Treinamento de habilidade</mat-label>
-        <mat-select formControlName="skillTraining">
-          <mat-option *ngFor="let t of trainingOptions" [value]="t.value">{{ t.label }}</mat-option>
-        </mat-select>
-        <mat-error *ngIf="form.controls.skillTraining.touched && form.controls.skillTraining.invalid">
-          Selecione um treinamento.
-        </mat-error>
-      </mat-form-field>
+      <!-- FORM DA PROVA -->
+      <div class="page-container" [formGroup]="exam">
+        <!-- Coluna esquerda -->
+        <div class="form">
+          <mat-form-field appearance="outline">
+            <mat-label>Nome da prova</mat-label>
+            <input matInput formControlName="examName" placeholder="Ex.: Prova de Urgência e Emergência">
+            <mat-error *ngIf="exam.controls.examName.touched && exam.controls.examName.invalid">
+              Informe um nome válido (mín. 3 caracteres).
+            </mat-error>
+          </mat-form-field>
 
-      <mat-form-field appearance="outline">
-        <mat-label>Número de questões</mat-label>
-        <mat-select formControlName="questionsCount">
-          <mat-option *ngFor="let n of questionCountOptions" [value]="n">{{ n }}</mat-option>
-        </mat-select>
-        <mat-error *ngIf="form.controls.questionsCount.touched && form.controls.questionsCount.invalid">
-          Selecione a quantidade de questões.
-        </mat-error>
-      </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Treinamento de habilidade</mat-label>
+            <mat-select formControlName="skillTraining">
+              <mat-option *ngFor="let t of trainingOptions" [value]="t.value">{{ t.label }}</mat-option>
+            </mat-select>
+            <mat-error *ngIf="exam.controls.skillTraining.touched && exam.controls.skillTraining.invalid">
+              Selecione um treinamento.
+            </mat-error>
+          </mat-form-field>
 
-      <!-- NEW: Global options configuration -->
-      <mat-form-field appearance="outline">
-        <mat-label>Número de opções (todas as questões)</mat-label>
-        <mat-select formControlName="optionsCount">
-          <mat-option *ngFor="let n of optionsCountChoices" [value]="n">{{ n }}</mat-option>
-        </mat-select>
-        <mat-error *ngIf="form.controls.optionsCount.touched && form.controls.optionsCount.invalid">
-          Selecione a quantidade de opções.
-        </mat-error>
-      </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Número de itens</mat-label>
+            <mat-select formControlName="itemsCount">
+              <mat-option *ngFor="let n of itemCountOptions" [value]="n">{{ n }}</mat-option>
+            </mat-select>
+            <mat-error *ngIf="exam.controls.itemsCount.touched && exam.controls.itemsCount.invalid">
+              Selecione a quantidade de itens.
+            </mat-error>
+          </mat-form-field>
 
-      <!-- Global option values -->
-      <div formArrayName="globalOptions" class="global-options">
-        <div class="option-row" *ngFor="let opt of globalOptionsArray.controls; let k = index" [formGroupName]="k">
-          <mat-form-field appearance="outline" class="option-points">
-            <mat-label>Valor da opção #{{ k + 1 }}</mat-label>
-            <input matInput type="number" formControlName="value" min="0" step="0.5">
+          <mat-form-field appearance="outline">
+            <mat-label>Número de opções (todos os itens)</mat-label>
+            <mat-select formControlName="optionsCount">
+              <mat-option *ngFor="let n of optionsCountChoices" [value]="n">{{ n }}</mat-option>
+            </mat-select>
+            <mat-error *ngIf="exam.controls.optionsCount.touched && exam.controls.optionsCount.invalid">
+              Selecione a quantidade de opções.
+            </mat-error>
+          </mat-form-field>
+
+          <!-- Opções globais -->
+          <div formArrayName="globalOptions" class="global-options">
+            <div class="option-row"
+                 *ngFor="let opt of globalOptionsArray(i).controls; let k = index"
+                 [formGroupName]="k">
+              <mat-form-field appearance="outline" class="option-points">
+                <mat-label>Valor da opção #{{ k + 1 }}</mat-label>
+                <input matInput type="number" formControlName="value" min="0" step="0.5">
+              </mat-form-field>
+            </div>
+          </div>
+        </div>
+
+        <!-- Coluna direita -->
+        <div class="form text-area-form">
+          <mat-form-field class="text-area" appearance="outline">
+            <mat-label>Caso clínico</mat-label>
+            <textarea matInput formControlName="clinicalCase" rows="8"
+                      placeholder="Descreva o caso clínico..."></textarea>
+            <mat-error *ngIf="exam.controls.clinicalCase.touched && exam.controls.clinicalCase.invalid">
+              Informe o caso clínico.
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field class="text-area" appearance="outline">
+            <mat-label>Regras e orientações da prova</mat-label>
+            <textarea matInput formControlName="examRules" rows="8"
+                      placeholder="Explique as regras e orientações..."></textarea>
+            <mat-error *ngIf="exam.controls.examRules.touched && exam.controls.examRules.invalid">
+              Informe as regras e orientações.
+            </mat-error>
           </mat-form-field>
         </div>
-      </div>
 
-    </div>
+        <!-- Rodapé da prova -->
+        <div class="footer">
+          <button mat-stroked-button color="primary" type="button" (click)="generateOne(i)">
+            <mat-icon>link</mat-icon>
+            Gerar esta
+          </button>
 
-    <!-- Right column -->
-    <div class="form text-area-form">
-
-      <mat-form-field class="text-area" appearance="outline">
-        <mat-label>Caso clínico</mat-label>
-        <textarea matInput formControlName="clinicalCase" rows="8" placeholder="Descreva o caso clínico..."></textarea>
-        <mat-error *ngIf="form.controls.clinicalCase.touched && form.controls.clinicalCase.invalid">
-          Informe o caso clínico.
-        </mat-error>
-      </mat-form-field>
-
-      <!-- NOVO: Regras e orientações -->
-      <mat-form-field class="text-area" appearance="outline">
-        <mat-label>Regras e orientações da prova</mat-label>
-        <textarea matInput formControlName="examRules" rows="8"
-          placeholder="Explique as regras e orientações..."></textarea>
-           <mat-error *ngIf="form.controls.examRules.touched && form.controls.examRules.invalid">
-          Informe as regras e orientações.
-        </mat-error>
-      </mat-form-field>
-      
-    </div>
-
-    <div class="footer">
-      <button mat-button type="button" (click)="resetAll()">
-        <mat-icon>refresh</mat-icon>
-        Limpar
-      </button>
-
-      <button mat-stroked-button color="primary" type="button" (click)="generateExam()">
-        <mat-icon>link</mat-icon>
-        Gerar
-      </button>
-
-      <div class="totals">
-        <span>Total de questões: {{ questionsArray.length }}</span>
-        <span>Total de pontos: {{ totalPoints }}</span>
-      </div>
-    </div>
-
-    <div class="share" *ngIf="lastShareUrl">
-      <strong>Link gerado:</strong>
-      <a [href]="lastShareUrl" target="_blank" rel="noopener">{{ lastShareUrl }}</a>
-    </div>
-  </div>
-
-  <!-- Questions area -->
-  <div class="exam-container" *ngIf="questionsArray.length > 0">
-    <div class="header" *ngIf="form.controls.clinicalCase.value">
-      <div class="clinic-case">
-        {{ form.controls.clinicalCase.value }}
-      </div>
-    </div>
-
-    <div class="exam-container-body">
-      <div class="question-field" *ngFor="let q of questionsArray.controls; let i = index; trackBy: trackByIndex"
-        [formGroup]="q">
-        <div class="q-head">
-          <div class="q-title">Questão - {{ i + 1 }}</div>
+          <div class="totals">
+            <span>Total de itens: {{ itemsArray(i).length }}</span>
+            <span>Total de pontos: {{ totalPointsFor(i) }}</span>
+          </div>
         </div>
 
-        <mat-form-field class="column-text-area" appearance="outline">
-          <mat-label>Enunciado</mat-label>
-          <textarea matInput formControlName="text" rows="4" placeholder="Descreva..."></textarea>
-          <mat-error *ngIf="q.controls.text.touched && q.controls.text.invalid">
-            Enunciado obrigatório (mín. 3 caracteres).
-          </mat-error>
-        </mat-form-field>
+        <!-- Link gerado (por aba) -->
+        <div class="share" *ngIf="lastShareUrlByIndex[i]">
+          <strong>Link gerado:</strong>
+          <a [href]="lastShareUrlByIndex[i]" target="_blank" rel="noopener">
+            {{ lastShareUrlByIndex[i] }}
+          </a>
+        </div>
       </div>
-    </div>
-  </div>
+
+      <!-- CARTÕES DOS ITENS -->
+      <div class="exam-container" *ngIf="itemsArray(i).length > 0">
+        <ng-container [formGroup]="exam">
+
+          <div class="header" *ngIf="exam.controls.clinicalCase.value">
+            <div class="clinic-case">
+              {{ exam.controls.clinicalCase.value }}
+            </div>
+          </div>
+
+          <div class="exam-container-body" formArrayName="items">
+            <div class="item-field"
+                 *ngFor="let it of itemsArray(i).controls; let j = index; trackBy: trackByIndex"
+                 [formGroupName]="j">
+              <div class="q-head">
+                <div class="q-title">Item - {{ j + 1 }}</div>
+              </div>
+
+              <mat-form-field class="column-text-area" appearance="outline">
+                <mat-label>Enunciado</mat-label>
+                <textarea matInput formControlName="text" rows="4" placeholder="Descreva..."></textarea>
+                <mat-error *ngIf="it.controls.text.touched && it.controls.text.invalid">
+                  Enunciado obrigatório (mín. 3 caracteres).
+                </mat-error>
+              </mat-form-field>
+            </div>
+          </div>
+
+        </ng-container>
+      </div>
+
+    </mat-tab>
+  </mat-tab-group>
 </form>

@@ -1,12 +1,12 @@
-<div class="answer-page" *ngIf="exam as e">
-  <div class="paper">
+<!-- Renderiza 1..N provas; mantém o mesmo layout/estilo para cada bloco -->
+<div class="answer-page" *ngIf="exams?.length; else notFound">
+  <!-- Um .paper por prova (ordem do storage/grupo) -->
+  <div class="paper" *ngFor="let e of exams; let i = index">
     <h1 class="title">{{ e.examName || 'Prova' }}</h1>
 
     <p class="disclaimer">
-
-      Antes de enviar este formulário, leia atentamente as orientações da prova abaixo. Após o envio, a nota será final
-      e não poderá ser alterada.
-
+      Antes de enviar este formulário, leia atentamente as orientações da prova abaixo.
+      Após o envio, a nota será final e não poderá ser alterada.
     </p>
 
     <mat-divider></mat-divider>
@@ -19,29 +19,30 @@
         </ng-container>
       </div>
     </div>
+
     <div class="case-block">
       <h2 class="case-title">Caso clínico</h2>
       <p class="case-text">{{ e.clinicalCase }}</p>
     </div>
 
-    <form [formGroup]="answersForm" class="answers-form" *ngIf="e.questions.length">
-
-      <!-- Column headers -->
-      <div class="grid header-row" [style.--cols]="e.questions[0]?.options?.length || 3">
-        <div class="cell qcell header"> </div>
-        <div class="cell ocell header" *ngFor="let h of optionHeaders">{{ h }}</div>
+    <!-- Formulário de respostas DA PROVA i -->
+    <form [formGroup]="forms[i]" class="answers-form" *ngIf="e.questions?.length">
+      <!-- Cabeçalhos das colunas (baseados na 1ª questão) -->
+      <div class="grid header-row" [ngStyle]="{'--cols': (e.questions?.[0]?.options?.length ?? 3)}">
+        <div class="cell qcell header"></div>
+        <div class="cell ocell header" *ngFor="let h of optionHeaders(i)">{{ h }}</div>
       </div>
 
-      <!-- Questions -->
-      <div class="grid body-rows" [style.--cols]="e.questions[0]?.options?.length || 3">
-        <ng-container *ngFor="let q of e.questions; let i = index">
+      <!-- Linhas das questões -->
+      <div class="grid body-rows" [ngStyle]="{'--cols': (e.questions?.[0]?.options?.length ?? 3)}">
+        <ng-container *ngFor="let q of e.questions; let j = index">
           <div class="cell qcell">
-            <div class="qindex">{{ i + 1 }}.</div>
+            <div class="qindex">{{ j + 1 }}.</div>
             <div class="qtext">{{ q.text }}</div>
           </div>
 
-          <!-- Options as a radio group -->
-          <mat-radio-group class="row-radios" [formControl]="selections.at(i)">
+          <!-- opções como radios -->
+          <mat-radio-group class="row-radios" [formControl]="selectionsArray(i).at(j)">
             <div class="cell ocell" *ngFor="let opt of q.options; let k = index">
               <mat-radio-button [value]="k"></mat-radio-button>
             </div>
@@ -49,14 +50,15 @@
         </ng-container>
       </div>
 
+      <!-- Rodapé/Total da prova i -->
       <div class="footer-line">
         <div class="totals">
           <strong>Nota total:</strong>
-          <span>{{ selectedTotal }} pontos</span>
+          <span>{{ selectedTotal(i) }} pontos</span>
         </div>
 
         <div class="actions">
-          <button mat-stroked-button color="primary" type="button" (click)="submitAnswers()">
+          <button mat-stroked-button color="primary" type="button" (click)="submitAnswers(i)">
             Enviar respostas
             <mat-icon>send</mat-icon>
           </button>
@@ -66,11 +68,13 @@
   </div>
 </div>
 
-<!-- Simple not-found fallback -->
-<div class="answer-page" *ngIf="!exam">
-  <div class="paper">
-    <h2>Prova não encontrada</h2>
-    <p>Verifique o link recebido.</p>
-    <button mat-stroked-button color="primary" routerLink="/private/nova-prova">Criar nova prova</button>
+<!-- Fallback: não encontrado -->
+<ng-template #notFound>
+  <div class="answer-page">
+    <div class="paper">
+      <h2>Prova não encontrada</h2>
+      <p>Verifique o link recebido.</p>
+      <button mat-stroked-button color="primary" routerLink="/private/nova-prova">Criar nova prova</button>
+    </div>
   </div>
-</div>
+</ng-template>

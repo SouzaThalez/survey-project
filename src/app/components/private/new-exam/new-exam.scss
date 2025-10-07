@@ -1,4 +1,3 @@
-/* new-exam.scss */
 :host {
   display: block;
 }
@@ -40,15 +39,12 @@
   /* === LADO ESQUERDO + DIREITO (formulários) === */
   .page-container {
     grid-template-columns: 1.1fr 1fr;
-    /* desktop */
-
     align-items: start;
 
     .form {
       display: grid;
       gap: 10px;
 
-      /* garante que os mat-form-field ocupem toda a largura */
       ::ng-deep .mat-form-field,
       .mat-form-field {
         width: 100%;
@@ -66,10 +62,8 @@
       .global-options {
         display: grid;
         gap: 10px;
-        /* cada campo tenta ter no mínimo 140px e se ajusta responsivamente */
         grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
 
-        /* usamos “contents” para que cada form-field ocupe a célula por si só */
         .option-row {
           display: contents;
         }
@@ -79,8 +73,6 @@
           width: 100%;
         }
       }
-
-
     }
 
     .footer {
@@ -115,7 +107,7 @@
     }
   }
 
-  /* === CARTÕES DAS QUESTÕES === */
+  /* === CARTÕES === */
   .exam-container {
     .header .clinic-case {
       padding: 8px 10px;
@@ -124,18 +116,17 @@
       border-radius: 10px;
       line-height: 1.5;
       color: #2d3643;
-      /* garante quebra em telas estreitas */
       white-space: pre-wrap;
       word-break: break-word;
     }
 
     .exam-container-body {
       display: grid;
-      /* Responsivo automático: define a “largura mínima” confortável de cada cartão */
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
       gap: 16px;
 
-      .question-field {
+      .question-field,
+      .item-field {
         border: 1px solid var(--card-border);
         border-radius: 10px;
         padding: 12px;
@@ -163,9 +154,6 @@
   }
 
   /* === RESPONSIVIDADE === */
-
-  /* Tablet/portrait ~800px: força empilhar colunas do form
-     e deixa as questões fluírem no auto-fit (2 colunas cabem) */
   @media (max-width: 900px) {
     .page-title {
       margin-top: 70px;
@@ -180,8 +168,6 @@
     }
   }
 
-  /* Celular: cartões 1 por linha (já acontece pelo minmax 280px se a tela for estreita),
-     mas garantimos melhor espaçamento */
   @media (max-width: 600px) {
     .page-container {
       padding: 12px;
@@ -192,5 +178,17 @@
     }
   }
 
+  .row-start {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
 
+    .count-field { width: 220px; }
+    .row-actions { margin-left: auto; display: flex; gap: 8px; }
+  }
+
+  .multi-tabs {
+    ::ng-deep .mat-mdc-tab .mdc-tab__text-label { font-weight: 600; }
+  }
 }

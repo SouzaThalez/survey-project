@@ -6,17 +6,29 @@ import { Subscription } from 'rxjs';
 
 type GeneratedOption = { value: number | null };
 type GeneratedQuestion = { text: string; options: GeneratedOption[]; totalPoints: number };
-type GeneratedExam = {
+
+// Formato salvo no localStorage (suporta tanto "questions" quanto "items" por compat)
+type StoredExam = {
   id: number;
   createdAt: string;
   examName: string | null;
   skillTraining: string | null;
-  questionsCount: number | null;
   clinicalCase: string | null;
   totalPoints: number;
-  examRules: string | null; // <<< NOVO
-  questions: GeneratedQuestion[];
+  examRules: string | null;
   shareUrl: string;
+
+  // compat: pode existir "questions" (preferencial) ou "items"
+  questions?: GeneratedQuestion[];
+  items?: { text: string; options: GeneratedOption[]; totalPoints: number }[];
+
+  // agrupamento
+  groupId?: number;
+  groupSize?: number;
+
+  // metadados não usados aqui
+  itemsCount?: number | null;
+  questionsCount?: number | null;
 };
 
 type AnswersForm = FormGroup<{
@@ -33,10 +45,15 @@ export class AnswerExam implements OnInit, OnDestroy {
   private readonly STORAGE_KEY = 'generatedExams';
   private sub?: Subscription;
 
-  examId!: number;
-  exam?: GeneratedExam;
+  // Pode vir examId (single) OU groupId (várias)
+  examId?: number;
+  groupId?: number;
 
-  answersForm!: AnswersForm;
+  // Lista de provas carregadas (1 ou N)
+  exams: StoredExam[] = [];
+
+  // Um formulário por prova (mesma ordem de "exams")
+  forms: AnswersForm[] = [];
 
   constructor(
     private route: ActivatedRoute,
@@ -47,24 +64,42 @@ export class AnswerExam implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.sub = this.route.queryParamMap.subscribe((qp) => {
-      const idStr = qp.get('examId');
-      this.examId = idStr ? Number(idStr) : NaN;
+      const examIdStr = qp.get('examId');
+      const groupIdStr = qp.get('groupId');
 
-      if (!this.examId || Number.isNaN(this.examId)) {
-        this.snack.open('Link inválido: examId ausente.', 'Ok', { duration: 2500 });
-        this.router.navigate(['/private/nova-prova']);
-        return;
+      this.examId = examIdStr ? Number(examIdStr) : undefined;
+      this.groupId = groupIdStr ? Number(groupIdStr) : undefined;
+
+      // Carrega do storage
+      const loaded = this.loadFromStorage();
+
+      if (this.groupId && !Number.isNaN(this.groupId)) {
+        // múltiplas provas (grupo)
+        this.exams = loaded.filter(e => (e.groupId ?? e.id) === this.groupId);
+      } else if (this.examId && !Number.isNaN(this.examId)) {
+        // prova única
+        const one = loaded.find(e => e.id === this.examId);
+        this.exams = one ? [one] : [];
+      } else {
+        this.exams = [];
       }
 
-      const exam = this.loadExam(this.examId);
-      if (!exam) {
+      if (!this.exams.length) {
         this.snack.open('Prova não encontrada.', 'Ok', { duration: 2500 });
         this.router.navigate(['/private/nova-prova']);
         return;
       }
 
-      this.exam = exam;
-      this.buildForm(exam);
+      // Normaliza para garantir que "questions" exista (compat com itens)
+      this.exams = this.exams.map(e => ({
+        ...e,
+        questions: (e.questions && e.questions.length)
+          ? e.questions
+          : (e.items || []).map(it => ({ text: it.text, options: it.options || [], totalPoints: it.totalPoints || 0 }))
+      }));
+
+      // Constrói um formulário por prova
+      this.buildForms();
     });
   }
 
@@ -72,62 +107,73 @@ export class AnswerExam implements OnInit, OnDestroy {
     this.sub?.unsubscribe();
   }
 
-  private loadExam(id: number): GeneratedExam | undefined {
+  // ==== Storage =====
+  private loadFromStorage(): StoredExam[] {
     try {
       const raw = localStorage.getItem(this.STORAGE_KEY);
-      const list: GeneratedExam[] = raw ? JSON.parse(raw) : [];
-      return list.find(e => e.id === id);
+      return raw ? JSON.parse(raw) as StoredExam[] : [];
     } catch {
-      return undefined;
+      return [];
     }
   }
 
-  private buildForm(exam: GeneratedExam): void {
-    const selections = this.fb.array<FormControl<number | null>>(
-      exam.questions.map(() => this.fb.control<number | null>(null, Validators.required))
-    );
-    this.answersForm = this.fb.nonNullable.group({
-      selections
+  // ==== Forms =====
+  private buildForms(): void {
+    this.forms = this.exams.map(exam => {
+      const selections = this.fb.array<FormControl<number | null>>(
+        (exam.questions || []).map(() => this.fb.control<number | null>(null, Validators.required))
+      );
+      return this.fb.nonNullable.group({ selections });
     });
   }
 
-  get selections(): FormArray<FormControl<number | null>> {
-    return this.answersForm.controls.selections;
+  selectionsArray(i: number): FormArray<FormControl<number | null>> {
+    return this.forms[i].controls.selections;
   }
 
-  /** Header columns derived from the first question’s options */
-  get optionHeaders(): string[] {
-    if (!this.exam || !this.exam.questions.length) return [];
-    const opts = this.exam.questions[0].options;
+  // ==== UI helpers (por prova) =====
+  optionHeaders(i: number): string[] {
+    const e = this.exams[i];
+    if (!e || !e.questions?.length) return [];
+    const opts = e.questions[0].options || [];
     return opts.map(o => `${o.value ?? 0} pontos`);
   }
 
-  /** Current total with selected options */
-  get selectedTotal(): number {
-    if (!this.exam) return 0;
-    return this.selections.controls.reduce((sum, ctrl, i) => {
-      const idx = ctrl.value ?? -1;
-      const pts = this.exam!.questions[i].options[idx]?.value ?? 0;
+  selectedTotal(i: number): number {
+    const e = this.exams[i];
+    if (!e || !e.questions?.length) return 0;
+    const selections = this.selectionsArray(i);
+    return selections.controls.reduce((sum, ctrl, qIdx) => {
+      const optIdx = ctrl.value ?? -1;
+      const pts = e.questions![qIdx].options[optIdx]?.value ?? 0;
       return sum + Number(pts);
     }, 0);
   }
 
-  submitAnswers(): void {
-    if (this.answersForm.invalid) {
-      this.answersForm.markAllAsTouched();
+  // ==== Envio =====
+  submitAnswers(i: number): void {
+    const e = this.exams[i];
+    const form = this.forms[i];
+
+    if (!e || !form) return;
+
+    if (form.invalid) {
+      form.markAllAsTouched();
       this.snack.open('Selecione uma opção para cada questão.', 'Ok', { duration: 2500 });
       return;
     }
 
+    const sels = this.selectionsArray(i);
     const payload = {
-      examId: this.examId,
+      examId: e.id,
+      groupId: e.groupId ?? e.id,
       submittedAt: new Date().toISOString(),
-      answers: this.selections.controls.map((c, i) => ({
-        questionIndex: i,
+      answers: sels.controls.map((c, qIdx) => ({
+        questionIndex: qIdx,
         selectedOptionIndex: c.value,
-        points: this.exam!.questions[i].options[c.value!]?.value ?? 0
+        points: e.questions![qIdx].options[c.value!]?.value ?? 0
       })),
-      total: this.selectedTotal
+      total: this.selectedTotal(i)
     };
 
     try {
@@ -140,8 +186,9 @@ export class AnswerExam implements OnInit, OnDestroy {
 
     this.snack.open('Respostas enviadas!', 'Ok', { duration: 2500 });
 
+    // Mantemos a navegação original por examId para compat.
     this.router.navigate(['/private/resultado-prova'], {
-      queryParams: { examId: this.examId }
+      queryParams: { examId: e.id, groupId: e.groupId ?? undefined }
     });
   }
 }

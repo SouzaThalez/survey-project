@@ -22,6 +22,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { LayoutModule } from '@angular/cdk/layout';
 import { ExamResults } from './exam-results/exam-results';
 import { UserPanel } from './user-panel/user-panel';
+import { MatTabsModule } from '@angular/material/tabs';
 
 
 @NgModule({
@@ -51,6 +52,7 @@ import { UserPanel } from './user-panel/user-panel';
     MatListModule,    
     MatTooltipModule,
     LayoutModule,
+    MatTabsModule
     
   ]
 })

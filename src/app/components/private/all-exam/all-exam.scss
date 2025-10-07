@@ -28,27 +28,27 @@
       gap: 10px;
       align-items: center;
 
-      .search { width: 100%; }
-      .filter, .sorter { width: 100%; }
+      .search {
+        width: 100%;
+      }
+
+      .filter,
+      .sorter {
+        width: 100%;
+      }
     }
   }
 
   .cards {
     margin-top: 18px;
-
-    /* base layout */
     display: grid;
     gap: 14px;
-
-    /* mobile-first: 1 col */
     grid-template-columns: 1fr;
 
-    /* tablet & desktop: force 2 columns */
     @media (min-width: 810px) {
       grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     }
 
-    /* very small screens safety */
     @media (max-width: 360px) {
       grid-template-columns: 1fr !important;
     }
@@ -76,16 +76,14 @@
           display: flex;
           gap: 8px;
           align-items: center;
-          flex-wrap: wrap; /* evita estouro quando o espaço fica curto */
+          flex-wrap: wrap;
 
-          /* custom color for remove action */
           .btn-remove {
             color: #c75c5c;
           }
         }
       }
 
-      /* em telas <= 800px, empilha título/ações para caber melhor */
       @media (max-width: 800px) {
         .card-header {
           flex-direction: column;
@@ -127,6 +125,7 @@
           color: #6b7280;
           font-weight: 600;
         }
+
         .chips {
           display: flex;
           gap: 6px;
@@ -156,7 +155,6 @@
           margin-bottom: 6px;
         }
 
-        /* sem truncar: expande o card junto com o texto */
         .case-text {
           display: block;
           background: #f8f9fa;
@@ -164,8 +162,8 @@
           border-radius: 8px;
           padding: 12px;
           line-height: 1.55;
-          white-space: pre-wrap; /* mantém quebras de linha do usuário */
-          word-break: break-word; /* evita overflow em palavras enormes/URLs */
+          white-space: pre-wrap;
+          word-break: break-word;
         }
       }
 
@@ -181,8 +179,14 @@
           grid-template-columns: 24px 1fr;
           gap: 8px;
 
-          .idx { font-weight: 600; color: #374151; }
-          .txt { color: #111827; }
+          .idx {
+            font-weight: 600;
+            color: #374151;
+          }
+
+          .txt {
+            color: #111827;
+          }
         }
 
         .more {
@@ -191,30 +195,47 @@
           margin-top: 2px;
         }
       }
-    }
+
+      /* NOVO: rodapé do grupo */
+      .bundle-foot {
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px dashed #e6e9ef;
+        display: flex;
+        justify-content: center;
+        font-size: 15px;
+        color: #eb4f4f;
+      }
+  }
+}
+
+.empty {
+  padding: 28px 6px 6px;
+  text-align: center;
+
+  h3 {
+    margin: 0 0 8px;
   }
 
-  .empty {
-    padding: 28px 6px 6px;
-    text-align: center;
+  p {
+    margin: 0;
+  }
+}
 
-    h3 { margin: 0 0 8px; }
-    p { margin: 0; }
+@media (max-width: 900px) {
+  .header-line .toolbar {
+    grid-template-columns: 1fr 1fr 1fr auto;
+  }
+}
+
+@media (max-width: 700px) {
+  .header-line {
+    padding-bottom: 10px;
+    margin-top: 45px;
   }
 
-  @media (max-width: 900px) {
-    .header-line .toolbar {
-      grid-template-columns: 1fr 1fr 1fr auto;
-    }
+  .header-line .toolbar {
+    grid-template-columns: 1fr;
   }
-
-  @media (max-width: 700px) {
-    .header-line{
-      padding-bottom: 10px;
-      margin-top: 45px;
-    }
-    .header-line .toolbar {
-      grid-template-columns: 1fr;
-    }
-  }
+}
 }

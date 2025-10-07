@@ -38,7 +38,7 @@
           Remover tudo
         </button>
       </div>
-      
+
     </div>
 
     <mat-divider></mat-divider>
@@ -48,9 +48,10 @@
         <div class="card-header">
           <div class="title">{{ e.examName || 'Prova' }}</div>
           <div class="actions">
+            <!-- MUDANÇA 1: abre por groupId se houver mais de 1 -->
             <a mat-stroked-button color="primary"
                [routerLink]="['/private/responder-prova']"
-               [queryParams]="{ examId: e.id }" target="_blank">
+               [queryParams]="e._groupCount > 1 ? { groupId: e._groupId } : { examId: e.id }" target="_blank">
               <mat-icon>open_in_new</mat-icon>
               Responder
             </a>
@@ -59,7 +60,7 @@
               <mat-icon>edit</mat-icon>
               Editar
             </a>
-            
+
             <a mat-stroked-button
                class="btn-remove"
                (click)="deleteOne(e.id)"
@@ -70,7 +71,7 @@
           </div>
         </div>
 
-        <!-- NOVO: Regras e orientações da prova (logo depois do card-header) -->
+        <!-- Regras e orientações -->
         <div class="case" *ngIf="e.examRules">
           <div class="case-title">Regras e orientações da prova</div>
           <div class="case-text">{{ e.examRules }}</div>
@@ -110,6 +111,11 @@
           <div class="more" *ngIf="e.questions.length > 5">
             + {{ e.questions.length - 5 }} mais…
           </div>
+        </div>
+
+        <!-- MUDANÇA 2: rodapé de grupo -->
+        <div class="bundle-foot" *ngIf="e._groupCount > 1">
+          Existem mais {{ e._groupCount - 1 }} prova(s) criadas nesta seção.
         </div>
       </div>
     </div>

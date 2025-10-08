@@ -95,7 +95,11 @@ export class AnswerExam implements OnInit, OnDestroy {
         ...e,
         questions: (e.questions && e.questions.length)
           ? e.questions
-          : (e.items || []).map(it => ({ text: it.text, options: it.options || [], totalPoints: it.totalPoints || 0 }))
+          : (e.items || []).map(it => ({
+              text: it.text,
+              options: it.options || [],
+              totalPoints: it.totalPoints || 0
+            }))
       }));
 
       // Constrói um formulário por prova
@@ -123,7 +127,10 @@ export class AnswerExam implements OnInit, OnDestroy {
       const selections = this.fb.array<FormControl<number | null>>(
         (exam.questions || []).map(() => this.fb.control<number | null>(null, Validators.required))
       );
-      return this.fb.nonNullable.group({ selections });
+      // group tipado
+      return this.fb.group<AnswersForm['controls']>({
+        selections
+      });
     });
   }
 
@@ -150,45 +157,78 @@ export class AnswerExam implements OnInit, OnDestroy {
     }, 0);
   }
 
+  overallTotal(): number {
+    if (!this.exams?.length) return 0;
+    return this.exams.reduce((acc, _e, idx) => acc + this.selectedTotal(idx), 0);
+  }
+
+  hasInvalidForms(): boolean {
+    return this.forms.some(f => f.invalid);
+  }
+
   // ==== Envio =====
-  submitAnswers(i: number): void {
-    const e = this.exams[i];
-    const form = this.forms[i];
+  submitAll(): void {
+    // valida tudo
+    const invalidIdxs = this.forms
+      .map((f, i) => ({ i, invalid: f.invalid }))
+      .filter(x => x.invalid)
+      .map(x => x.i);
 
-    if (!e || !form) return;
-
-    if (form.invalid) {
-      form.markAllAsTouched();
-      this.snack.open('Selecione uma opção para cada questão.', 'Ok', { duration: 2500 });
+    if (invalidIdxs.length) {
+      this.forms.forEach(f => f.markAllAsTouched());
+      const lista = invalidIdxs.map(i => i + 1).join(', ');
+      this.snack.open(
+        invalidIdxs.length === 1
+          ? `Selecione uma opção para cada questão na Prova ${lista}.`
+          : `Selecione uma opção para cada questão nas Provas: ${lista}.`,
+        'Ok',
+        { duration: 3500 }
+      );
       return;
     }
 
-    const sels = this.selectionsArray(i);
-    const payload = {
-      examId: e.id,
-      groupId: e.groupId ?? e.id,
-      submittedAt: new Date().toISOString(),
-      answers: sels.controls.map((c, qIdx) => ({
-        questionIndex: qIdx,
-        selectedOptionIndex: c.value,
-        points: e.questions![qIdx].options[c.value!]?.value ?? 0
-      })),
-      total: this.selectedTotal(i)
-    };
+    // monta payload para CADA prova
+    const payloads = this.exams.map((e, i) => {
+      const sels = this.selectionsArray(i);
+      return {
+        examId: e.id,
+        groupId: e.groupId ?? e.id,
+        submittedAt: new Date().toISOString(),
+        answers: sels.controls.map((c, qIdx) => ({
+          questionIndex: qIdx,
+          selectedOptionIndex: c.value,
+          points: e.questions![qIdx].options[c.value!]?.value ?? 0
+        })),
+        total: this.selectedTotal(i)
+      };
+    });
 
+    // salva todos em 'examResponses' (um registro por prova)
     try {
       const key = 'examResponses';
       const raw = localStorage.getItem(key);
       const list = raw ? JSON.parse(raw) : [];
-      list.unshift(payload);
+      // preserva a ordem dos exams no topo (unshift em ordem reversa)
+      for (let p = payloads.length - 1; p >= 0; p--) {
+        list.unshift(payloads[p]);
+      }
       localStorage.setItem(key, JSON.stringify(list));
     } catch {}
 
     this.snack.open('Respostas enviadas!', 'Ok', { duration: 2500 });
 
-    // Mantemos a navegação original por examId para compat.
-    this.router.navigate(['/private/resultado-prova'], {
-      queryParams: { examId: e.id, groupId: e.groupId ?? undefined }
-    });
+    // Navega para o resultado:
+    // - se veio por groupId, prioriza groupId
+    // - senão, mantém compat por examId (usa a primeira prova)
+    if (this.groupId) {
+      this.router.navigate(['/private/resultado-prova'], {
+        queryParams: { groupId: this.groupId }
+      });
+    } else {
+      const id = this.examId ?? this.exams[0]?.id;
+      this.router.navigate(['/private/resultado-prova'], {
+        queryParams: { examId: id }
+      });
+    }
   }
 }

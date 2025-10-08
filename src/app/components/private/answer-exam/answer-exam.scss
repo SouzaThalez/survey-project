@@ -1,7 +1,7 @@
 .answer-page {
   background: #f2f2f2 url('/assets/bg-blur.jpg') no-repeat center/cover;
   min-height: 100vh;
-  padding: 24px;
+  padding: 24px 24px 120px; // espaço para o footer global
 
   .paper {
     max-width: 960px;
@@ -120,9 +120,86 @@
     }
   }
 
+  /* Footer global colado ao fim da lista, com "sticky" no viewport */
+  .global-footer {
+    position: sticky;
+    bottom: 0;
+    margin: 24px auto 0;
+    max-width: 960px;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: saturate(150%) blur(6px);
+    border: 1px solid #e6e9ef;
+    border-radius: 12px;
+    box-shadow: 0 -6px 18px rgba(0,0,0,.06);
+    padding: 16px 20px;
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 16px;
+    align-items: center;
+
+    .summary {
+      .summary-title {
+        font-weight: 600;
+        color: #3c4043;
+        margin-bottom: 6px;
+      }
+      .summary-line {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        font-size: 14px;
+
+        .label { color: #5f6368; }
+        .value { color: #202124; font-weight: 600; }
+      }
+    }
+
+    .grand-total {
+      text-align: right;
+      padding: 8px 12px;
+      background: #f7f9ff;
+      border: 1px solid #e0e7ff;
+      border-radius: 10px;
+
+      .label {
+        font-size: 12px;
+        color: #5f6368;
+      }
+      .value {
+        font-size: 18px;
+        font-weight: 700;
+        color: #1a73e8;
+        line-height: 1.1;
+      }
+    }
+
+    .actions {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+
+      .submit-all-btn {
+        font-weight: 600;
+        mat-icon { margin-left: 6px; }
+      }
+
+      .hint {
+        font-size: 12px;
+        color: #d93025;
+      }
+    }
+  }
+
   @media (max-width: 700px) {
     .answers-form .grid {
       grid-template-columns: 1fr repeat(var(--cols), 56px);
+    }
+
+    .global-footer {
+      grid-template-columns: 1fr;
+      .grand-total { text-align: left; }
+      .actions { align-items: stretch; }
     }
   }
 }

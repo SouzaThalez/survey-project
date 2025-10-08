@@ -9,7 +9,8 @@ type StoredUser = {
   lastName: string;
   email: string;
   password: string;
-  role: 'Professor' | 'Admin';
+  // Pode vir como 'Professor' | 'Admin' ou 'Professor' | 'admin' (vamos normalizar)
+  role?: string;
   createdAt: string;
 };
 
@@ -17,12 +18,12 @@ type StoredUser = {
   selector: 'app-login',
   standalone: false,
   templateUrl: './login.html',
-  styleUrl: './login.scss'
+  styleUrls: ['./login.scss'] // <- cuidado: use styleUrls (plural)
 })
 export class Login implements OnInit {
-  private readonly USERS_KEY = 'usersStore';
+  // Tenta ambas as chaves, na ordem (users = usada no seu UserPanel atual)
+  private readonly USERS_KEYS = ['users', 'usersStore'];
   private readonly AUTH_KEY = 'authUser';
-  private readonly REMEMBER_KEY = 'rememberEmail';
 
   loading = false;
   showPass = false;
@@ -30,7 +31,6 @@ export class Login implements OnInit {
   form!: FormGroup<{
     email: FormControl<string>;
     password: FormControl<string>;
-    remember: FormControl<boolean>;
   }>;
 
   constructor(
@@ -44,8 +44,7 @@ export class Login implements OnInit {
       }),
       password: this.fb.nonNullable.control('', {
         validators: [Validators.required, Validators.minLength(6)]
-      }),
-      remember: this.fb.nonNullable.control(true)
+      })
     });
   }
 
@@ -56,12 +55,37 @@ export class Login implements OnInit {
       this.router.navigate(['/private']);
       return;
     }
+  }
 
-    // Preenche email lembrado (se existir)
-    const remembered = localStorage.getItem(this.REMEMBER_KEY);
-    if (remembered) {
-      this.form.controls.email.setValue(remembered);
+  private readUsers(): StoredUser[] {
+    const out: StoredUser[] = [];
+    for (const key of this.USERS_KEYS) {
+      try {
+        const raw = localStorage.getItem(key);
+        if (!raw) continue;
+        const arr = JSON.parse(raw);
+        if (Array.isArray(arr)) {
+          out.push(...arr);
+        }
+      } catch {
+        // ignora parse inválido
+      }
     }
+
+    // Remove duplicados por email (caso existam nas duas chaves)
+    const seen = new Set<string>();
+    const dedup = out.filter(u => {
+      const email = (u.email || '').toLowerCase().trim();
+      if (!email || seen.has(email)) return false;
+      seen.add(email);
+      return true;
+    });
+
+    // Normaliza role (Admin/Professor)
+    return dedup.map(u => ({
+      ...u,
+      role: (u.role || '').toLowerCase() === 'admin' ? 'Admin' : 'Professor'
+    }));
   }
 
   signIn(): void {
@@ -70,15 +94,21 @@ export class Login implements OnInit {
       return;
     }
 
-    const { email, password, remember } = this.form.getRawValue();
+    const { email, password } = this.form.getRawValue();
+    const emailNorm = (email || '').toLowerCase().trim();
     this.loading = true;
 
     try {
-      const raw = localStorage.getItem(this.USERS_KEY);
-      const users: StoredUser[] = raw ? JSON.parse(raw) : [];
+      const users = this.readUsers();
+     
+
+      if (!users.length) {
+        this.snack.open('Nenhum usuário cadastrado. Crie um no Painel de Usuários.', 'Ok', { duration: 2500 });
+        return;
+      }
 
       const found = users.find(u =>
-        u.email?.toLowerCase().trim() === email.toLowerCase().trim() &&
+        (u.email || '').toLowerCase().trim() === emailNorm &&
         u.password === password
       );
 
@@ -91,20 +121,14 @@ export class Login implements OnInit {
       const session = {
         id: found.id,
         email: found.email,
-        name: `${found.firstName} ${found.lastName}`.trim(),
-        role: found.role
+        name: `${found.firstName || ''} ${found.lastName || ''}`.trim(),
+        role: found.role || 'Professor'
       };
+
       localStorage.setItem(this.AUTH_KEY, JSON.stringify(session));
 
-      // Lembrar email
-      if (remember) {
-        localStorage.setItem(this.REMEMBER_KEY, found.email);
-      } else {
-        localStorage.removeItem(this.REMEMBER_KEY);
-      }
-
       this.snack.open('Login realizado!', 'Ok', { duration: 1200 });
-      this.router.navigate(['/private']);
+      this.router.navigate(['/private/nova-prova']);
     } catch {
       this.snack.open('Erro ao ler usuários locais.', 'Ok', { duration: 2000 });
     } finally {

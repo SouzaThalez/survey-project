@@ -1,17 +1,12 @@
-.answer-page {
+.login-page{
   background: #f2f2f2 url('/assets/bg-blur.jpg') no-repeat center/cover;
   min-height: 100vh;
   min-height: 100dvh; /* melhor em mobile */
   padding: 24px;
 
-  /* REMOVIDO o grid/centro vertical */
-  /* display: grid;
-     place-items: center; */
-
   .paper {
     max-width: 480px; /* mais compacto p/ login */
     width: 100%;
-    /* Centraliza na horizontal e dá respiro no topo */
     margin: calc(56px + env(safe-area-inset-top)) auto 24px;
     background: #fff;
     border-radius: 12px;
@@ -42,7 +37,10 @@
     .row {
       display: flex;
       align-items: center;
-      justify-content: space-between;
+
+      &.link-only {
+        justify-content: flex-end; /* alinha só o link à direita */
+      }
 
       .link {
         color: #3f51b5;

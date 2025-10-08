@@ -1,6 +1,12 @@
 <!-- Botão hambúrguer (aparece só no celular quando o painel está fechado) -->
-<button class="mobile-hamburger" mat-fab color="primary" *ngIf="isHandset && !panelOpen" (click)="panelOpen = true"
-  aria-label="Abrir painel">
+<button
+  class="mobile-hamburger"
+  mat-fab
+  color="primary"
+  *ngIf="isHandset && !panelOpen"
+  (click)="panelOpen = true"
+  aria-label="Abrir painel"
+>
   <span class="material-symbols-outlined">menu</span>
 </button>
 
@@ -8,58 +14,126 @@
 <div class="scrim" *ngIf="isHandset && panelOpen" (click)="panelOpen = false"></div>
 
 <!-- Painel -->
-<div class="left-panel-container" [class.is-overlay]="isHandset" [class.is-open]="!isHandset || panelOpen"
-  [class.is-collapsed]="!isHandset && collapsed" [attr.aria-expanded]="!isHandset ? !collapsed : panelOpen">
-
+<div
+  class="left-panel-container"
+  [class.is-overlay]="isHandset"
+  [class.is-open]="!isHandset || panelOpen"
+  [class.is-collapsed]="!isHandset && collapsed"
+  [attr.aria-expanded]="!isHandset ? !collapsed : panelOpen"
+>
   <div class="panel-header">
     <span class="material-symbols-outlined logo">assignment</span>
     <span class="panel-title">Painel</span>
 
     <!-- Fechar (só celular/overlay) -->
-    <button mat-icon-button class="close-btn" *ngIf="isHandset" (click)="panelOpen = false" aria-label="Fechar painel">
+    <button
+      mat-icon-button
+      class="close-btn"
+      *ngIf="isHandset"
+      (click)="panelOpen = false"
+      aria-label="Fechar painel"
+    >
       <span class="material-symbols-outlined">close</span>
     </button>
 
     <!-- Alternar recolhido/aberto (não-handset) -->
-    <button mat-icon-button class="collapse-btn" *ngIf="!isHandset" (click)="toggleCollapsed()"
+    <button
+      mat-icon-button
+      class="collapse-btn"
+      *ngIf="!isHandset"
+      (click)="toggleCollapsed()"
       [matTooltip]="collapsed ? 'Expandir painel' : 'Recolher painel'"
-      [attr.aria-label]="collapsed ? 'Expandir painel' : 'Recolher painel'">
+      [attr.aria-label]="collapsed ? 'Expandir painel' : 'Recolher painel'"
+    >
       <span class="material-symbols-outlined">{{ collapsed ? 'chevron_right' : 'chevron_left' }}</span>
     </button>
   </div>
 
   <div class="panel-list">
-    <a class="list-item-container" routerLink="nova-prova" routerLinkActive="active"
-      [routerLinkActiveOptions]="{ exact: true }" matTooltip="Nova prova"
-      (click)="isHandset ? panelOpen = false : null">
+    <a
+      class="list-item-container"
+      routerLink="nova-prova"
+      routerLinkActive="active"
+      [routerLinkActiveOptions]="{ exact: true }"
+      matTooltip="Nova prova"
+      (click)="isHandset ? panelOpen = false : null"
+    >
       <span class="material-symbols-outlined li-icon">note_add</span>
       <span class="li-text">Nova prova</span>
       <span class="material-symbols-outlined chev">chevron_right</span>
     </a>
 
-    <a class="list-item-container" routerLink="todas-prova" routerLinkActive="active"
-      [routerLinkActiveOptions]="{ exact: true }" matTooltip="Provas criadas"
-      (click)="isHandset ? panelOpen = false : null">
+    <a
+      class="list-item-container"
+      routerLink="todas-prova"
+      routerLinkActive="active"
+      [routerLinkActiveOptions]="{ exact: true }"
+      matTooltip="Provas criadas"
+      (click)="isHandset ? panelOpen = false : null"
+    >
       <span class="material-symbols-outlined li-icon">folder_open</span>
       <span class="li-text">Provas criadas</span>
       <span class="material-symbols-outlined chev">chevron_right</span>
     </a>
 
-    <a class="list-item-container" routerLink="resultado-prova" routerLinkActive="active"
-      [routerLinkActiveOptions]="{ exact: true }" matTooltip="Resultados prova"
-      (click)="isHandset ? panelOpen = false : null">
+    <a
+      class="list-item-container"
+      routerLink="resultado-prova"
+      routerLinkActive="active"
+      [routerLinkActiveOptions]="{ exact: true }"
+      matTooltip="Resultados prova"
+      (click)="isHandset ? panelOpen = false : null"
+    >
       <span class="material-symbols-outlined li-icon">print</span>
       <span class="li-text">Resultados prova</span>
       <span class="material-symbols-outlined chev">chevron_right</span>
     </a>
 
-    <a class="list-item-container" routerLink="painel-usuario" routerLinkActive="active"
-      [routerLinkActiveOptions]="{ exact: true }" matTooltip="Painel Usuários"
-      (click)="isHandset ? panelOpen = false : null">
+    <a
+      class="list-item-container"
+      routerLink="painel-usuario"
+      routerLinkActive="active"
+      [routerLinkActiveOptions]="{ exact: true }"
+      matTooltip="Painel Usuários"
+      (click)="isHandset ? panelOpen = false : null"
+    >
       <span class="material-symbols-outlined li-icon">group</span>
       <span class="li-text">Painel de Usuários</span>
       <span class="material-symbols-outlined chev">chevron_right</span>
     </a>
+  </div>
 
+  <!-- ===== Rodapé do painel: usuário + sair ===== -->
+  <div class="panel-bottom" *ngIf="user as u">
+    <!-- Item com ícone + nome -->
+    <div
+      class="list-item-container user-item"
+      [matTooltip]="u.name || u.email"
+      matTooltipPosition="right"
+      tabindex="0"
+      role="button"
+    >
+      <span class="material-symbols-outlined li-icon user">account_circle</span>
+      <span class="li-text">
+        <span class="u-name">{{ u.name || u.email }}</span>
+        <small class="u-role" *ngIf="u.role">{{ u.role }}</small>
+      </span>
+      <span class="material-symbols-outlined chev">person</span>
+    </div>
+
+    <!-- Link para sair (logo abaixo) -->
+    <a
+      class="list-item-container logout-item"
+      (click)="logout()"
+      [matTooltip]="'Sair'"
+      matTooltipPosition="right"
+      role="button"
+      tabindex="0"
+      [attr.aria-label]="'Sair'"
+    >
+      <span class="material-symbols-outlined li-icon danger">logout</span>
+      <span class="li-text danger">Sair</span>
+      <span class="material-symbols-outlined chev">chevron_right</span>
+    </a>
   </div>
 </div>

@@ -17,25 +17,38 @@
       </a>
     </div>
 
-    <!-- Lista de cartões de resultados -->
+    <!-- Lista de cartões (simples ou compostos) -->
     <div class="results" *ngIf="cards.length">
       <div class="exam-card" *ngFor="let c of cards; trackBy: trackByCard">
+
         <div class="header-line">
           <div class="titles">
-            <h2 class="exam-name">{{ c.exam.examName || ('Prova ' + c.exam.id) }}</h2>
+            <h2 class="exam-name">{{ cardTitle(c) }}</h2>
+
             <div class="meta">
               <span class="chip">
                 <mat-icon>event</mat-icon>
-                criada em {{ c.exam.createdAt | date:'short' }}
+                criada em {{ createdAtChip(c) }}
               </span>
+
+              <!-- Número de questões -->
               <span class="chip">
                 <mat-icon>quiz</mat-icon>
-                {{ c.exam.questions.length || c.exam.questionsCount || 0 }} questão(ões)
+                {{ cardQuestionsCount(c) }} questão(ões)
               </span>
+
+              <!-- Valor máximo -->
               <span class="chip">
                 <mat-icon>score</mat-icon>
                 máximo {{ c.stats.max }} pts
               </span>
+
+              <!-- Only for composite: how many exams -->
+              <span class="chip" *ngIf="c.isComposite">
+                <mat-icon>layers</mat-icon>
+                {{ c.exams.length }} prova(s)
+              </span>
+
               <span class="chip" *ngIf="c.stats.lastAt">
                 <mat-icon>schedule</mat-icon>
                 último envio {{ c.stats.lastAt | date:'short' }}
@@ -44,14 +57,35 @@
           </div>
 
           <div class="actions">
-            <a mat-stroked-button color="primary"
+            <!-- Abrir link público:
+                 - Prova simples: shareUrl da prova
+                 - Prova composta: usa o primeiro shareUrl do grupo (mantém layout) -->
+            <a *ngIf="!c.isComposite"
+               mat-stroked-button color="primary"
                [href]="c.exam.shareUrl" target="_blank" rel="noopener">
               <mat-icon>link</mat-icon>
               Abrir link público
             </a>
-            <a mat-button color="primary"
+            <a *ngIf="c.isComposite && c.exams[0]?.shareUrl"
+               mat-stroked-button color="primary"
+               [href]="c.exams[0].shareUrl" target="_blank" rel="noopener">
+              <mat-icon>link</mat-icon>
+              Abrir link público (1ª)
+            </a>
+
+            <!-- Responder novamente:
+                 - Prova simples: examId
+                 - Prova composta: groupId -->
+            <a *ngIf="!c.isComposite"
+               mat-button color="primary"
                routerLink="/private/responder-prova"
                [queryParams]="{ examId: c.exam.id }">
+              Responder novamente
+            </a>
+            <a *ngIf="c.isComposite"
+               mat-button color="primary"
+               routerLink="/private/responder-prova"
+               [queryParams]="{ groupId: c.groupId }">
               Responder novamente
             </a>
           </div>
@@ -69,15 +103,16 @@
           </div>
           <div class="stat">
             <div class="label">Número de questões</div>
-            <div class="value">{{ c.exam.questions.length || c.exam.questionsCount || 0 }}</div>
+            <div class="value">{{ cardQuestionsCount(c) }}</div>
           </div>
         </div>
 
         <mat-divider></mat-divider>
 
-        <!-- Submissões (lista simples) -->
-        <div class="subs">
-          <div class="sub" *ngFor="let s of c.submissions; trackBy: trackBySub">
+        <!-- Submissões -->
+        <!-- PROVA SIMPLES -->
+        <div class="subs" *ngIf="!c.isComposite">
+          <div class="sub" *ngFor="let s of c.submissions; trackBy: trackBySubSimple">
             <div class="left">
               <mat-icon>person</mat-icon>
               <div class="s-meta">
@@ -90,7 +125,6 @@
                 <span class="pct">({{ percent(s.total, c.stats.max) }})</span>
               </div>
 
-              <!-- Botão alterado: Imprimir PDF -->
               <button mat-stroked-button color="primary" (click)="printSubmission(c.exam, s)">
                 <mat-icon>print</mat-icon>
                 Imprimir PDF
@@ -98,6 +132,30 @@
             </div>
           </div>
         </div>
+
+        <!-- PROVA COMPOSTA -->
+        <div class="subs" *ngIf="c.isComposite">
+          <div class="sub" *ngFor="let s of c.submissions; trackBy: trackBySubComposite">
+            <div class="left">
+              <mat-icon>group</mat-icon>
+              <div class="s-meta">
+                <div class="date">Enviado em {{ s.submittedAt | date:'short' }}</div>
+              </div>
+            </div>
+            <div class="right">
+              <div class="score">
+                <strong>{{ s.total }}</strong> / {{ c.stats.max }}
+                <span class="pct">({{ percent(s.total, c.stats.max) }})</span>
+              </div>
+
+              <button mat-stroked-button color="primary" (click)="printSubmissionGroup(c, s)">
+                <mat-icon>print</mat-icon>
+                Imprimir PDF (todas)
+              </button>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
 

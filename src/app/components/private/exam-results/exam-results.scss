@@ -37,7 +37,7 @@
   .exam-card {
     border: 1px solid #e6e9ef;
     border-radius: 12px;
-    background: #fff;
+    background: #dde0e7;
     padding: 16px;
 
     .header-line {
@@ -81,7 +81,7 @@
       }
     }
 
-    /* >>> Alterado para 3 colunas */
+    /* 3 colunas */
     .stats-row {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -121,7 +121,7 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        background-color:#ededed;
+        background-color:#ffffff;
         gap: 12px;
         border: 1px solid #eef1f6;
         border-radius: 10px;
@@ -159,9 +159,9 @@
     .exam-card .stats-row {
       grid-template-columns: repeat(2, 1fr);
     }
-    .paper{
-      .title{
-            margin-top: 35px;
+    .paper {
+      .title {
+        margin-top: 35px;
       }
     }
   }

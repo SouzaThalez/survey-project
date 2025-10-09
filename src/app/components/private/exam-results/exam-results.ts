@@ -323,7 +323,7 @@ export class ExamResults implements OnInit {
 
     <div class="meta">
       <span class="chip">Peso: ${exam.totalPoints} pts</span>
-      <span class="chip">Questões: ${exam.questions.length || exam.questionsCount || 0}</span>
+      <span class="chip">Enunciados: ${exam.questions.length || exam.questionsCount || 0}</span>
       <span class="chip">Resultado: ${sub.total} / ${exam.totalPoints} (${resultadoPct})</span>
     </div>
 
@@ -401,7 +401,7 @@ export class ExamResults implements OnInit {
               <div class="muted">Criada em ${this.escapeHtml(createdAt)} • Envio em ${this.escapeHtml(submittedAt)} • Professor: ${this.escapeHtml(who)}</div>
               <div class="meta">
                 <span class="chip">Peso: ${ex.totalPoints} pts</span>
-                <span class="chip">Questões: ${ex.questions.length || ex.questionsCount || 0}</span>
+                <span class="chip">Enunciados: ${ex.questions.length || ex.questionsCount || 0}</span>
                 <span class="chip">Resultado: ${subTotal} / ${ex.totalPoints} (${pctLocal})</span>
               </div>
 

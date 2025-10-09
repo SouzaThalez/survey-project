@@ -44,6 +44,15 @@
             </mat-error>
           </mat-form-field>
 
+          <!-- NOVO CAMPO: Tema da prova -->
+          <mat-form-field appearance="outline">
+            <mat-label>Tema da prova</mat-label>
+            <input matInput formControlName="examTheme" placeholder="Ex.: Choque séptico">
+            <mat-error *ngIf="exam.controls.examTheme.touched && exam.controls.examTheme.invalid">
+              Informe um tema válido (mín. 3 caracteres).
+            </mat-error>
+          </mat-form-field>
+
           <mat-form-field appearance="outline">
             <mat-label>Treinamento de habilidade</mat-label>
             <mat-select formControlName="skillTraining">
@@ -76,9 +85,8 @@
 
           <!-- Opções globais -->
           <div formArrayName="globalOptions" class="global-options">
-            <div class="option-row"
-                 *ngFor="let opt of globalOptionsArray(i).controls; let k = index"
-                 [formGroupName]="k">
+            <div class="option-row" *ngFor="let opt of globalOptionsArray(i).controls; let k = index"
+              [formGroupName]="k">
               <mat-form-field appearance="outline" class="option-points">
                 <mat-label>Valor da opção #{{ k + 1 }}</mat-label>
                 <input matInput type="number" formControlName="value" min="0" step="0.5">
@@ -92,7 +100,7 @@
           <mat-form-field class="text-area" appearance="outline">
             <mat-label>Caso clínico</mat-label>
             <textarea matInput formControlName="clinicalCase" rows="8"
-                      placeholder="Descreva o caso clínico..."></textarea>
+              placeholder="Descreva o caso clínico..."></textarea>
             <mat-error *ngIf="exam.controls.clinicalCase.touched && exam.controls.clinicalCase.invalid">
               Informe o caso clínico.
             </mat-error>
@@ -101,7 +109,7 @@
           <mat-form-field class="text-area" appearance="outline">
             <mat-label>Regras e orientações da prova</mat-label>
             <textarea matInput formControlName="examRules" rows="8"
-                      placeholder="Explique as regras e orientações..."></textarea>
+              placeholder="Explique as regras e orientações..."></textarea>
             <mat-error *ngIf="exam.controls.examRules.touched && exam.controls.examRules.invalid">
               Informe as regras e orientações.
             </mat-error>
@@ -110,7 +118,6 @@
 
         <!-- Rodapé da prova -->
         <div class="footer">
-
           <div class="totals">
             <span>Total de itens: {{ itemsArray(i).length }}</span>
             <span>Total de pontos: {{ totalPointsFor(i) }}</span>
@@ -130,6 +137,12 @@
       <div class="exam-container" *ngIf="itemsArray(i).length > 0">
         <ng-container [formGroup]="exam">
 
+          <div class="header" *ngIf="exam.controls.examTheme.value">
+            <div class="clinic-case">
+              {{ exam.controls.examTheme.value }}
+            </div>
+          </div>
+
           <div class="header" *ngIf="exam.controls.clinicalCase.value">
             <div class="clinic-case">
               {{ exam.controls.clinicalCase.value }}
@@ -137,9 +150,8 @@
           </div>
 
           <div class="exam-container-body" formArrayName="items">
-            <div class="item-field"
-                 *ngFor="let it of itemsArray(i).controls; let j = index; trackBy: trackByIndex"
-                 [formGroupName]="j">
+            <div class="item-field" *ngFor="let it of itemsArray(i).controls; let j = index; trackBy: trackByIndex"
+              [formGroupName]="j">
               <div class="q-head">
                 <div class="q-title">Item - {{ j + 1 }}</div>
               </div>

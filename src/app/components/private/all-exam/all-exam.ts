@@ -9,6 +9,7 @@ type StoredExam = {
   id: number;
   createdAt: string;
   examName: string | null;
+  examTheme?: string | null;                    // <<< NOVO
   skillTraining: string | null;
   clinicalCase: string | null;
   examRules: string | null;
@@ -32,6 +33,7 @@ type CardExam = {
   id: number;                       // id do representante (usado para remover)
   createdAt: string;
   examName: string | null;
+  examTheme: string | null;         // <<< NOVO
   skillTraining: string | null;
   clinicalCase: string | null;
   examRules: string | null;
@@ -114,6 +116,7 @@ export class AllExam implements OnInit {
         id: rep.id,
         createdAt: rep.createdAt,
         examName: rep.examName,
+        examTheme: rep.examTheme ?? null,  // <<< NOVO
         skillTraining: rep.skillTraining,
         clinicalCase: rep.clinicalCase,
         examRules: rep.examRules,
@@ -155,11 +158,12 @@ export class AllExam implements OnInit {
     const q = this.search.trim().toLowerCase();
     if (q) {
       out = out.filter(e => {
-        const inName  = (e.examName || '').toLowerCase().includes(q);
-        const inCase  = (e.clinicalCase || '').toLowerCase().includes(q);
-        const inRules = (e.examRules || '').toLowerCase().includes(q);
-        const inQs    = (e.questions || []).some(qq => (qq.text || '').toLowerCase().includes(q));
-        return inName || inCase || inRules || inQs;
+        const inName   = (e.examName || '').toLowerCase().includes(q);
+        const inTheme  = (e.examTheme || '').toLowerCase().includes(q); // <<< NOVO
+        const inCase   = (e.clinicalCase || '').toLowerCase().includes(q);
+        const inRules  = (e.examRules || '').toLowerCase().includes(q);
+        const inQs     = (e.questions || []).some(qq => (qq.text || '').toLowerCase().includes(q));
+        return inName || inTheme || inCase || inRules || inQs;
       });
     }
 

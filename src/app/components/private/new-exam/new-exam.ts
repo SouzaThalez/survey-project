@@ -9,6 +9,7 @@ type ItemGroup        = { text: FormControl<string> };
 
 type ExamForm = {
   examName: FormControl<string | null>;
+  examTheme: FormControl<string | null>;     // <<< NOVO CAMPO
   skillTraining: FormControl<string | null>;
   itemsCount: FormControl<number | null>;
   optionsCount: FormControl<number | null>;
@@ -25,6 +26,7 @@ type GeneratedExam = {
   id: number;
   createdAt: string;   // ISO
   examName: string | null;
+  examTheme: string | null;                 // <<< NOVO CAMPO
   skillTraining: string | null;
   itemsCount: number | null;
   clinicalCase: string | null;
@@ -133,6 +135,7 @@ export class NewExam implements OnInit, OnDestroy {
   private createExamForm(): FormGroup<ExamForm> {
     const fg = this.fb.nonNullable.group({
       examName:      this.fb.control<string | null>(null, [Validators.required, Validators.minLength(3)]),
+      examTheme:     this.fb.control<string | null>(null, [Validators.required, Validators.minLength(3)]), // NOVO
       skillTraining: this.fb.control<string | null>(null, Validators.required),
       itemsCount:    this.fb.control<number | null>(3, Validators.required),
       optionsCount:  this.fb.control<number | null>(3, Validators.required),
@@ -256,6 +259,7 @@ export class NewExam implements OnInit, OnDestroy {
       id,
       createdAt: new Date().toISOString(),
       examName: v.examName,
+      examTheme: v.examTheme ?? null,     // <<< NOVO CAMPO
       skillTraining: v.skillTraining,
       itemsCount: v.itemsCount,
       clinicalCase: v.clinicalCase,
@@ -293,7 +297,6 @@ export class NewExam implements OnInit, OnDestroy {
   }
 
   generateAll(): void {
-    
     const groupId = Date.now(); // mesmo groupId para todas as abas
     const groupSize = this.examsArray.length;
 

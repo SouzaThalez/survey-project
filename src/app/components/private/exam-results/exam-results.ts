@@ -8,6 +8,7 @@ type GeneratedExam = {
   id: number;
   createdAt: string;
   examName: string | null;
+  examTheme?: string | null; // <<< NOVO: tema da prova
   skillTraining: string | null;
   questionsCount: number | null;
   clinicalCase: string | null;
@@ -318,13 +319,16 @@ export class ExamResults implements OnInit {
 <body>
   <div class="paper">
     <h1>${this.escapeHtml(exam.examName || 'Prova')}</h1>
-    <div class="muted">Criada em ${this.escapeHtml(createdAt)} • Envio em ${this.escapeHtml(submittedAt)} • Por: ${this.escapeHtml(who)}</div>
+    <div class="muted">Criada em ${this.escapeHtml(createdAt)} • Envio em ${this.escapeHtml(submittedAt)} &nbsp;&nbsp;&nbsp; Professor: ${this.escapeHtml(who)}</div>
 
     <div class="meta">
       <span class="chip">Peso: ${exam.totalPoints} pts</span>
       <span class="chip">Questões: ${exam.questions.length || exam.questionsCount || 0}</span>
       <span class="chip">Resultado: ${sub.total} / ${exam.totalPoints} (${resultadoPct})</span>
     </div>
+
+    ${exam.examTheme ? '<h3>Tema da prova</h3><div class="case">' + this.escapeHtml(exam.examTheme || '') + '</div>' : ''}
+
     ${exam.examRules ? '<h3>Regras e Orientações</h3><div class="case">' + this.escapeHtml(exam.examRules || '') + '</div>' : ''}
     ${exam.clinicalCase ? '<h3>Caso Clínico</h3><div class="case">' + this.escapeHtml(exam.clinicalCase || '') + '</div>' : ''}
 
@@ -394,12 +398,14 @@ export class ExamResults implements OnInit {
           return `
             <div class="exam-section">
               <h2>${this.escapeHtml(ex.examName || `Prova ${idx + 1}`)}</h2>
-              <div class="muted">Criada em ${this.escapeHtml(createdAt)} • Envio em ${this.escapeHtml(submittedAt)} • Por: ${this.escapeHtml(who)}</div>
+              <div class="muted">Criada em ${this.escapeHtml(createdAt)} • Envio em ${this.escapeHtml(submittedAt)} • Professor: ${this.escapeHtml(who)}</div>
               <div class="meta">
                 <span class="chip">Peso: ${ex.totalPoints} pts</span>
                 <span class="chip">Questões: ${ex.questions.length || ex.questionsCount || 0}</span>
                 <span class="chip">Resultado: ${subTotal} / ${ex.totalPoints} (${pctLocal})</span>
               </div>
+
+              ${ex.examTheme ? `<h3>Tema da prova</h3><div class="case">${this.escapeHtml(ex.examTheme || '')}</div>` : ''}
 
               ${ex.examRules ? `<h3>Regras e Orientações</h3><div class="case">${this.escapeHtml(ex.examRules || '')}</div>` : ''}
               ${ex.clinicalCase ? `<h3>Caso Clínico</h3><div class="case">${this.escapeHtml(ex.clinicalCase || '')}</div>` : ''}

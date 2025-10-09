@@ -12,6 +12,7 @@ type StoredExam = {
   id: number;
   createdAt: string;
   examName: string | null;
+  examTheme?: string | null; // <<< NOVO
   skillTraining: string | null;
   clinicalCase: string | null;
   totalPoints: number;
@@ -201,7 +202,7 @@ export class AnswerExam implements OnInit, OnDestroy {
           examId: e.id,
           groupId: e.groupId ?? e.id,
           submittedAt,
-          submittedBy: submitter, // <<< aqui salvamos quem respondeu
+          submittedBy: submitter, // quem respondeu
           answers: sels.controls.map((c, qIdx) => ({
             questionIndex: qIdx,
             selectedOptionIndex: c.value,

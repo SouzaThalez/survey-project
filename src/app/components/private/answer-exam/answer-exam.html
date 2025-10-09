@@ -11,6 +11,14 @@
 
     <mat-divider></mat-divider>
 
+    <!-- NOVO: Tema da prova (antes de Regras e orientações) -->
+    <div class="case-block" *ngIf="e.examTheme">
+      <div class="required">Tema da prova</div>
+      <div class="case-text">
+        <span class="rules-text">{{ e.examTheme }}</span>
+      </div>
+    </div>
+
     <div class="case-block">
       <div class="required">Regras e orientações</div>
       <div class="case-text">

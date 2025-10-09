@@ -35,6 +35,8 @@ type AnswersForm = FormGroup<{
   selections: FormArray<FormControl<number | null>>;
 }>;
 
+type Submitter = { id?: number; name?: string; email?: string; role?: string };
+
 @Component({
   selector: 'app-answer-exam',
   standalone: false,
@@ -43,6 +45,9 @@ type AnswersForm = FormGroup<{
 })
 export class AnswerExam implements OnInit, OnDestroy {
   private readonly STORAGE_KEY = 'generatedExams';
+  private readonly RESPONSES_KEY = 'examResponses';
+  private readonly AUTH_KEY = 'authUser';
+
   private sub?: Subscription;
 
   // Pode vir examId (single) OU groupId (várias)
@@ -95,11 +100,7 @@ export class AnswerExam implements OnInit, OnDestroy {
         ...e,
         questions: (e.questions && e.questions.length)
           ? e.questions
-          : (e.items || []).map(it => ({
-              text: it.text,
-              options: it.options || [],
-              totalPoints: it.totalPoints || 0
-            }))
+          : (e.items || []).map(it => ({ text: it.text, options: it.options || [], totalPoints: it.totalPoints || 0 }))
       }));
 
       // Constrói um formulário por prova
@@ -127,10 +128,7 @@ export class AnswerExam implements OnInit, OnDestroy {
       const selections = this.fb.array<FormControl<number | null>>(
         (exam.questions || []).map(() => this.fb.control<number | null>(null, Validators.required))
       );
-      // group tipado
-      return this.fb.group<AnswersForm['controls']>({
-        selections
-      });
+      return this.fb.nonNullable.group({ selections });
     });
   }
 
@@ -157,78 +155,75 @@ export class AnswerExam implements OnInit, OnDestroy {
     }, 0);
   }
 
-  overallTotal(): number {
-    if (!this.exams?.length) return 0;
-    return this.exams.reduce((acc, _e, idx) => acc + this.selectedTotal(idx), 0);
+  grandTotal(): number {
+    return this.exams.reduce((acc, _, idx) => acc + this.selectedTotal(idx), 0);
   }
 
-  hasInvalidForms(): boolean {
-    return this.forms.some(f => f.invalid);
+  // === Habilitação do botão global ===
+  areAllFormsValid(): boolean {
+    // Habilita apenas quando TODOS os formulários estão válidos (todas as questões marcadas)
+    return this.forms.length > 0 && this.forms.every(f => f.valid);
   }
 
-  // ==== Envio =====
+  // ==== Envio (um botão para todas as provas) =====
+  private getSubmitter(): Submitter | undefined {
+    try {
+      const raw = localStorage.getItem(this.AUTH_KEY);
+      if (!raw) return undefined;
+      const s = JSON.parse(raw);
+      return { id: s?.id, name: s?.name, email: s?.email, role: s?.role };
+    } catch {
+      return undefined;
+    }
+  }
+
   submitAll(): void {
-    // valida tudo
-    const invalidIdxs = this.forms
-      .map((f, i) => ({ i, invalid: f.invalid }))
-      .filter(x => x.invalid)
-      .map(x => x.i);
+    if (!this.exams.length) return;
 
-    if (invalidIdxs.length) {
-      this.forms.forEach(f => f.markAllAsTouched());
-      const lista = invalidIdxs.map(i => i + 1).join(', ');
-      this.snack.open(
-        invalidIdxs.length === 1
-          ? `Selecione uma opção para cada questão na Prova ${lista}.`
-          : `Selecione uma opção para cada questão nas Provas: ${lista}.`,
-        'Ok',
-        { duration: 3500 }
-      );
+    // Se ainda tiver inválido, nem tenta enviar (segurança extra além do disabled)
+    if (!this.areAllFormsValid()) {
+      this.snack.open('Selecione uma opção para cada questão de todas as provas.', 'Ok', { duration: 2500 });
       return;
     }
 
-    // monta payload para CADA prova
-    const payloads = this.exams.map((e, i) => {
-      const sels = this.selectionsArray(i);
-      return {
-        examId: e.id,
-        groupId: e.groupId ?? e.id,
-        submittedAt: new Date().toISOString(),
-        answers: sels.controls.map((c, qIdx) => ({
-          questionIndex: qIdx,
-          selectedOptionIndex: c.value,
-          points: e.questions![qIdx].options[c.value!]?.value ?? 0
-        })),
-        total: this.selectedTotal(i)
-      };
-    });
+    const submittedAt = new Date().toISOString();
+    const submitter = this.getSubmitter();
 
-    // salva todos em 'examResponses' (um registro por prova)
     try {
-      const key = 'examResponses';
+      const key = this.RESPONSES_KEY;
       const raw = localStorage.getItem(key);
       const list = raw ? JSON.parse(raw) : [];
-      // preserva a ordem dos exams no topo (unshift em ordem reversa)
-      for (let p = payloads.length - 1; p >= 0; p--) {
-        list.unshift(payloads[p]);
-      }
+
+      // salva UMA entrada por prova (com mesmo submittedAt e groupId)
+      this.exams.forEach((e, i) => {
+        const sels = this.selectionsArray(i);
+        const payload = {
+          examId: e.id,
+          groupId: e.groupId ?? e.id,
+          submittedAt,
+          submittedBy: submitter, // <<< aqui salvamos quem respondeu
+          answers: sels.controls.map((c, qIdx) => ({
+            questionIndex: qIdx,
+            selectedOptionIndex: c.value,
+            points: e.questions![qIdx].options[c.value!]?.value ?? 0
+          })),
+          total: this.selectedTotal(i)
+        };
+        list.unshift(payload);
+      });
+
       localStorage.setItem(key, JSON.stringify(list));
-    } catch {}
+    } catch {
+      // ignore
+    }
 
     this.snack.open('Respostas enviadas!', 'Ok', { duration: 2500 });
 
-    // Navega para o resultado:
-    // - se veio por groupId, prioriza groupId
-    // - senão, mantém compat por examId (usa a primeira prova)
-    if (this.groupId) {
-      this.router.navigate(['/private/resultado-prova'], {
-        queryParams: { groupId: this.groupId }
-      });
-    } else {
-      const id = this.examId ?? this.exams[0]?.id;
-      this.router.navigate(['/private/resultado-prova'], {
-        queryParams: { examId: id }
-      });
-    }
+    // Navega para resultados: se grupo composto, manda groupId; se não, examId
+    const first = this.exams[0];
+    const gid = first.groupId ?? undefined;
+    this.router.navigate(['/private/resultado-prova'], {
+      queryParams: gid ? { groupId: gid } : { examId: first.id }
+    });
   }
 }

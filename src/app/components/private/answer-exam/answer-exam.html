@@ -50,46 +50,33 @@
         </ng-container>
       </div>
 
-      <!-- Rodapé/Total da prova i (sem botão individual) -->
-      <div class="footer-line">
+      <!-- Rodapé/Total da prova i (apenas o contador) -->
+      <div class="footer-line no-submit">
         <div class="totals">
-          <strong>Nota total:</strong>
+          <strong>Nota desta prova:</strong>
           <span>{{ selectedTotal(i) }} pontos</span>
         </div>
-        <!-- Sem ações por prova -->
       </div>
     </form>
   </div>
 
-  <!-- Footer global: somatório de todas as provas + botão único de envio -->
+  <!-- Footer global: somatório + um único botão para enviar todas as provas -->
   <div class="global-footer">
-    <div class="summary">
-      <div class="summary-title">Resumo das provas</div>
-      <div class="summary-line" *ngFor="let e of exams; let i = index">
-        <span class="label">{{ e.examName || ('Prova ' + (i + 1)) }}:</span>
-        <span class="value">{{ selectedTotal(i) }} pts</span>
-      </div>
+    <div class="left">
+      <div class="grand-title">Total de todas as provas</div>
+      <div class="grand-points">{{ grandTotal() }} pontos</div>
     </div>
 
-    <div class="grand-total">
-      <div class="label">Somatório geral</div>
-      <div class="value">{{ overallTotal() }} pts</div>
-    </div>
-
-    <div class="actions">
+    <div class="right">
       <button
-        mat-flat-button
+        mat-stroked-button
         color="primary"
-        class="submit-all-btn"
+        type="button"
         (click)="submitAll()"
-        [disabled]="hasInvalidForms()"
-      >
-        Enviar respostas de todas as provas
+        [disabled]="!areAllFormsValid()">
+        Enviar todas as respostas
         <mat-icon>send</mat-icon>
       </button>
-      <div class="hint" *ngIf="hasInvalidForms()">
-        Complete as questões pendentes para enviar.
-      </div>
     </div>
   </div>
 </div>

@@ -43,7 +43,7 @@
                 máximo {{ c.stats.max }} pts
               </span>
 
-              <!-- Only for composite: how many exams -->
+              <!-- Somente composto: quantidade de provas -->
               <span class="chip" *ngIf="c.isComposite">
                 <mat-icon>layers</mat-icon>
                 {{ c.exams.length }} prova(s)
@@ -57,9 +57,7 @@
           </div>
 
           <div class="actions">
-            <!-- Abrir link público:
-                 - Prova simples: shareUrl da prova
-                 - Prova composta: usa o primeiro shareUrl do grupo (mantém layout) -->
+            <!-- Abrir link público -->
             <a *ngIf="!c.isComposite"
                mat-stroked-button color="primary"
                [href]="c.exam.shareUrl" target="_blank" rel="noopener">
@@ -73,9 +71,7 @@
               Abrir link público (1ª)
             </a>
 
-            <!-- Responder novamente:
-                 - Prova simples: examId
-                 - Prova composta: groupId -->
+            <!-- Responder novamente -->
             <a *ngIf="!c.isComposite"
                mat-button color="primary"
                routerLink="/private/responder-prova"
@@ -116,6 +112,10 @@
             <div class="left">
               <mat-icon>person</mat-icon>
               <div class="s-meta">
+                <div class="user-line">
+                  <span class="user">{{ s.submittedBy?.name || s.submittedBy?.email || 'Usuário' }}</span>
+                  <span class="role" *ngIf="s.submittedBy?.role as role">({{ role }})</span>
+                </div>
                 <div class="date">Enviado em {{ s.submittedAt | date:'short' }}</div>
               </div>
             </div>
@@ -139,6 +139,10 @@
             <div class="left">
               <mat-icon>group</mat-icon>
               <div class="s-meta">
+                <div class="user-line">
+                  <span class="user">{{ s.submittedBy?.name || s.submittedBy?.email || 'Usuário' }}</span>
+                  <span class="role" *ngIf="s.submittedBy?.role as role">({{ role }})</span>
+                </div>
                 <div class="date">Enviado em {{ s.submittedAt | date:'short' }}</div>
               </div>
             </div>

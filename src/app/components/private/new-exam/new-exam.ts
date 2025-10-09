@@ -71,7 +71,7 @@ export class NewExam implements OnInit, OnDestroy {
     { value: 'th8', label: 'Treinamento - 8 (TH 8)' },
   ];
 
-  itemCountOptions    = [3, 5, 10, 15];
+  itemCountOptions    = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15];
   optionsCountChoices = [2, 3, 4, 5];
 
   // Persistência
@@ -293,6 +293,7 @@ export class NewExam implements OnInit, OnDestroy {
   }
 
   generateAll(): void {
+    
     const groupId = Date.now(); // mesmo groupId para todas as abas
     const groupSize = this.examsArray.length;
 

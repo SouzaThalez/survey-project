@@ -15,8 +15,6 @@ type GeneratedExam = {
   examRules?: string | null;
   questions: GeneratedQuestion[];
   shareUrl: string;
-
-  // NOVO: metadados de agrupamento (podem não existir em históricos)
   groupId?: number;
   groupSize?: number;
 };
@@ -27,14 +25,20 @@ type SavedAnswer = {
   points: number;
 };
 
+type Submitter = {
+  id?: number;
+  name?: string;
+  email?: string;
+  role?: string;
+};
+
 type SavedResponse = {
   examId: number;
   submittedAt: string;
   answers: SavedAnswer[];
   total: number;
-
-  // NOVO: compat com envio em grupo
   groupId?: number;
+  submittedBy?: Submitter; // <<< quem respondeu
 };
 
 type Stats = {
@@ -58,6 +62,7 @@ type CombinedSubmission = {
   total: number;
   totalsByExam: { examId: number; total: number }[];
   perExamAnswers: { examId: number; answers: SavedAnswer[] }[];
+  submittedBy?: Submitter; // agregado do lote (primeiro disponível)
 };
 
 type ExamCardComposite = {
@@ -80,7 +85,7 @@ export class ExamResults implements OnInit {
   private readonly EXAMS_KEY = 'generatedExams';
   private readonly RESPONSES_KEY = 'examResponses';
 
-  examIdFilter?: number; // opcional via query param
+  examIdFilter?: number;
   cards: ExamCard[] = [];
   loaded = false;
 
@@ -99,17 +104,12 @@ export class ExamResults implements OnInit {
     const exams: GeneratedExam[] = this.safeGet<GeneratedExam[]>(this.EXAMS_KEY, []);
     const responses: SavedResponse[] = this.safeGet<SavedResponse[]>(this.RESPONSES_KEY, []);
 
-    // ordenar por recência (exams por id desc; respostas por submittedAt desc)
     exams.sort((a, b) => b.id - a.id);
-    responses.sort(
-      (a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()
-    );
+    responses.sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
 
-    // Índices auxiliares
     const examById = new Map<number, GeneratedExam>();
     for (const e of exams) examById.set(e.id, e);
 
-    // Helper: garante groupId calculado
     const getGroupIdOfExam = (e: GeneratedExam) => (e.groupId ?? e.id);
     const getGroupIdOfResponse = (r: SavedResponse) => {
       if (r.groupId) return r.groupId;
@@ -117,11 +117,6 @@ export class ExamResults implements OnInit {
       return ex ? getGroupIdOfExam(ex) : r.examId;
     };
 
-    // Filtra por examId, se solicitado
-    const visibleExamIds = new Set<number>();
-    if (this.examIdFilter) visibleExamIds.add(this.examIdFilter);
-
-    // Mapa de groupId -> exams do grupo
     const examsByGroup = new Map<number, GeneratedExam[]>();
     for (const ex of exams) {
       if (this.examIdFilter && ex.id !== this.examIdFilter) continue;
@@ -131,10 +126,8 @@ export class ExamResults implements OnInit {
       examsByGroup.set(gid, arr);
     }
 
-    // Mapa de groupId -> respostas (brutas)
     const responsesByGroup = new Map<number, SavedResponse[]>();
     for (const r of responses) {
-      // se filtro de examId ativo, mantém apenas esse exame
       if (this.examIdFilter && r.examId !== this.examIdFilter) continue;
       const gid = getGroupIdOfResponse(r);
       const arr = responsesByGroup.get(gid) || [];
@@ -142,20 +135,16 @@ export class ExamResults implements OnInit {
       responsesByGroup.set(gid, arr);
     }
 
-    // Monta cards por grupo
     const cards: ExamCard[] = [];
     for (const [groupId, groupExams] of examsByGroup.entries()) {
       const groupResponses = responsesByGroup.get(groupId) || [];
-      if (!groupResponses.length) continue; // apenas grupos com envios
+      if (!groupResponses.length) continue;
 
-      // É composto se houver >= 2 provas no grupo
       const isComposite = groupExams.length > 1;
 
       if (!isComposite) {
-        // Cartão simples (retrocompatível)
         const exam = groupExams[0];
         const subs = groupResponses.filter((r) => r.examId === exam.id);
-
         if (!subs.length) continue;
 
         const totals = subs.map((s) => s.total);
@@ -173,41 +162,29 @@ export class ExamResults implements OnInit {
           stats: { max, avg, best, worst, count, lastAt },
         });
       } else {
-        // Cartão composto: agrupa as respostas do grupo por submittedAt (exato).
-        // (para maior robustez, poderíamos "agrupar por janela" ~2s, mas o envio em lote usa timestamp idêntico)
+        // agrupa por submittedAt (lote)
         const buckets = new Map<string, SavedResponse[]>();
         for (const r of groupResponses) {
-          const key = r.submittedAt; // chave de lote
+          const key = r.submittedAt;
           const arr = buckets.get(key) || [];
           arr.push(r);
           buckets.set(key, arr);
         }
 
-        // Converte em CombinedSubmission[] e ordena por recência
         const combined: CombinedSubmission[] = Array.from(buckets.entries())
           .map(([submittedAt, list]) => {
-            // soma total e organiza por exame
             const totalsByExam: { examId: number; total: number }[] = [];
             const perExamAnswers: { examId: number; answers: SavedAnswer[] }[] = [];
             let sum = 0;
-
             for (const r of list) {
               sum += (r.total || 0);
               totalsByExam.push({ examId: r.examId, total: r.total || 0 });
               perExamAnswers.push({ examId: r.examId, answers: r.answers || [] });
             }
-
-            return {
-              submittedAt,
-              total: sum,
-              totalsByExam,
-              perExamAnswers,
-            };
+            const submittedBy = list.find(x => !!x.submittedBy)?.submittedBy;
+            return { submittedAt, total: sum, totalsByExam, perExamAnswers, submittedBy };
           })
-          .sort(
-            (a, b) =>
-              new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()
-          );
+          .sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
 
         const max = groupExams.reduce((acc, e) => acc + Number(e.totalPoints || 0), 0);
         const totals = combined.map((c) => c.total);
@@ -227,7 +204,6 @@ export class ExamResults implements OnInit {
       }
     }
 
-    // ordena cartões por recência (lastAt)
     cards.sort((a, b) => {
       const aT = a.stats.lastAt ? new Date(a.stats.lastAt).getTime() : 0;
       const bT = b.stats.lastAt ? new Date(b.stats.lastAt).getTime() : 0;
@@ -254,7 +230,6 @@ export class ExamResults implements OnInit {
     return `${isFinite(p) ? p : 0}%`;
   }
 
-  // Título do cartão
   cardTitle(c: ExamCard): string {
     if (c.isComposite) {
       const base = c.exams[0]?.examName || 'Prova composta';
@@ -264,12 +239,10 @@ export class ExamResults implements OnInit {
     return c.exam.examName || `Prova ${c.exam.id}`;
   }
 
-  // Data "criada em"
   createdAtChip(c: ExamCard): string {
     if (!c.isComposite) {
       return new Date(c.exam.createdAt).toLocaleString();
     }
-    // usa a menor data de criação do grupo
     const times = c.exams
       .map((e) => new Date(e.createdAt).getTime())
       .filter((n) => !Number.isNaN(n));
@@ -278,7 +251,6 @@ export class ExamResults implements OnInit {
     return min.toLocaleString();
   }
 
-  // Número de questões do cartão (soma no composto)
   cardQuestionsCount(c: ExamCard): number {
     const countFor = (e: GeneratedExam) =>
       (e.questions?.length ?? e.questionsCount ?? 0);
@@ -286,9 +258,9 @@ export class ExamResults implements OnInit {
     return c.exams.reduce((acc, e) => acc + countFor(e), 0);
   }
 
-  // ======= TRACK BY =======
+  // track by
   trackByCard = (_: number, c: ExamCard) =>
-    c.isComposite ? `g-${c.groupId}` : `e-${c.exam.id}`;
+    c.isComposite ? `g-${(c as any).groupId}` : `e-${(c as any).exam.id}`;
 
   trackBySubSimple = (_: number, s: SavedResponse) =>
     `${s.examId}-${s.submittedAt}`;
@@ -304,7 +276,6 @@ export class ExamResults implements OnInit {
 
       const submittedAt = new Date(sub.submittedAt).toLocaleString();
       const createdAt = new Date(exam.createdAt).toLocaleString();
-
       const answersHtml = sub.answers
         .map((a) => {
           const qIndex = a.questionIndex + 1;
@@ -318,8 +289,8 @@ export class ExamResults implements OnInit {
             </tr>`;
         })
         .join('');
-
       const resultadoPct = this.percent(sub.total, exam.totalPoints);
+      const who = sub.submittedBy?.name || sub.submittedBy?.email || 'Usuário';
 
       const html = `<!doctype html>
 <html>
@@ -342,23 +313,20 @@ export class ExamResults implements OnInit {
     .col-idx{width:48px; font-weight:600}
     .col-pts{width:120px; text-align:right; font-weight:600}
     .totals{display:flex; justify-content:flex-end; margin-top:12px; font-weight:700}
-    @media print { .no-print { display:none } }
   </style>
 </head>
 <body>
   <div class="paper">
     <h1>${this.escapeHtml(exam.examName || 'Prova')}</h1>
-    <div class="muted">Criada em ${this.escapeHtml(createdAt)} • Envio em ${this.escapeHtml(submittedAt)}</div>
+    <div class="muted">Criada em ${this.escapeHtml(createdAt)} • Envio em ${this.escapeHtml(submittedAt)} • Por: ${this.escapeHtml(who)}</div>
 
     <div class="meta">
       <span class="chip">Peso: ${exam.totalPoints} pts</span>
       <span class="chip">Questões: ${exam.questions.length || exam.questionsCount || 0}</span>
       <span class="chip">Resultado: ${sub.total} / ${exam.totalPoints} (${resultadoPct})</span>
     </div>
-    <h3>Regras e Orientações</h3>
-    <div class="case">${this.escapeHtml(exam.examRules || '')}</div>
-    <h3>Caso Clínico</h3>
-    <div class="case">${this.escapeHtml(exam.clinicalCase || '')}</div>
+    ${exam.examRules ? '<h3>Regras e Orientações</h3><div class="case">' + this.escapeHtml(exam.examRules || '') + '</div>' : ''}
+    ${exam.clinicalCase ? '<h3>Caso Clínico</h3><div class="case">' + this.escapeHtml(exam.clinicalCase || '') + '</div>' : ''}
 
     <table>
       <thead>
@@ -375,12 +343,7 @@ export class ExamResults implements OnInit {
 
     <div class="totals">Total: ${sub.total} / ${exam.totalPoints}</div>
   </div>
-  <script>
-    window.onload = function(){
-      window.print();
-      setTimeout(() => window.close(), 300);
-    }
-  </script>
+  <script>window.onload=function(){window.print();setTimeout(()=>window.close(),300);}</script>
 </body>
 </html>`;
 
@@ -388,12 +351,12 @@ export class ExamResults implements OnInit {
       win.document.write(html);
       win.document.close();
     } catch {
-      // popup bloqueado etc.
+      // ignore
     }
   }
 
   // ======= PRINT (COMPOSTA) =======
-  printSubmissionGroup(card: ExamCardComposite, sub: CombinedSubmission): void {
+  printSubmissionGroup(card: any, sub: CombinedSubmission): void {
     try {
       const win = window.open('', '_blank', 'width=900,height=1000');
       if (!win) return;
@@ -401,17 +364,13 @@ export class ExamResults implements OnInit {
       const submittedAt = new Date(sub.submittedAt).toLocaleString();
       const totalMax = card.stats.max;
       const resultadoPct = this.percent(sub.total, totalMax);
-
-      // Índice rápido examId -> exam / respostas
-      const examById = new Map<number, GeneratedExam>();
-      for (const e of card.exams) examById.set(e.id, e);
+      const who = sub.submittedBy?.name || sub.submittedBy?.email || 'Usuário';
 
       const answersByExam = new Map<number, SavedAnswer[]>();
       for (const pea of sub.perExamAnswers) answersByExam.set(pea.examId, pea.answers);
 
-      // Seções por prova
       const sectionsHtml = card.exams
-        .map((ex, idx) => {
+        .map((ex: GeneratedExam, idx: number) => {
           const answers = answersByExam.get(ex.id) || [];
           const createdAt = new Date(ex.createdAt).toLocaleString();
 
@@ -435,7 +394,7 @@ export class ExamResults implements OnInit {
           return `
             <div class="exam-section">
               <h2>${this.escapeHtml(ex.examName || `Prova ${idx + 1}`)}</h2>
-              <div class="muted">Criada em ${this.escapeHtml(createdAt)} • Envio em ${this.escapeHtml(submittedAt)}</div>
+              <div class="muted">Criada em ${this.escapeHtml(createdAt)} • Envio em ${this.escapeHtml(submittedAt)} • Por: ${this.escapeHtml(who)}</div>
               <div class="meta">
                 <span class="chip">Peso: ${ex.totalPoints} pts</span>
                 <span class="chip">Questões: ${ex.questions.length || ex.questionsCount || 0}</span>
@@ -488,13 +447,12 @@ export class ExamResults implements OnInit {
     .col-idx{width:48px; font-weight:600}
     .col-pts{width:120px; text-align:right; font-weight:600}
     .grand{display:flex; justify-content:flex-end; margin-top:18px; font-weight:800; font-size:16px}
-    @media print { .no-print { display:none } }
   </style>
 </head>
 <body>
   <div class="paper">
     <h1>Resultado — Prova composta</h1>
-    <div class="muted">Grupo ${card.groupId} • Envio em ${this.escapeHtml(submittedAt)}</div>
+    <div class="muted">Grupo ${card.groupId} • Envio em ${this.escapeHtml(submittedAt)} • Por: ${this.escapeHtml(who)}</div>
     <div class="meta">
       <span class="chip">Provas: ${card.exams.length}</span>
       <span class="chip">Questões: ${this.cardQuestionsCount(card)}</span>
@@ -506,12 +464,7 @@ export class ExamResults implements OnInit {
 
     <div class="grand">Total do grupo: ${sub.total} / ${totalMax}</div>
   </div>
-  <script>
-    window.onload = function(){
-      window.print();
-      setTimeout(() => window.close(), 300);
-    }
-  </script>
+  <script>window.onload=function(){window.print();setTimeout(()=>window.close(),300);}</script>
 </body>
 </html>`;
 
@@ -519,7 +472,7 @@ export class ExamResults implements OnInit {
       win.document.write(html);
       win.document.close();
     } catch {
-      // popup bloqueado etc.
+      // ignore
     }
   }
 

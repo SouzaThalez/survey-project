@@ -131,8 +131,26 @@
           display: inline-flex;
           align-items: center;
           gap: 8px;
+
           mat-icon { color: #64748b; }
-          .date { color: #374151; }
+
+          .s-meta {
+            display: grid;
+            gap: 2px;
+
+            .user-line {
+              color: #111827;
+              font-weight: 700;
+
+              .role {
+                margin-left: 6px;
+                color: #6b7280;
+                font-weight: 500;
+              }
+            }
+
+            .date { color: #374151; }
+          }
         }
 
         .right {
@@ -160,9 +178,7 @@
       grid-template-columns: repeat(2, 1fr);
     }
     .paper {
-      .title {
-        margin-top: 35px;
-      }
+      .title { margin-top: 35px; }
     }
   }
 }

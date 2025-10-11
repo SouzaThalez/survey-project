@@ -60,7 +60,7 @@ export class NewExam implements OnInit, OnDestroy {
 
   // UI
   selectedIndex = 0;
-  examCountOptions = [1, 2, 3, 4, 5];
+  examCountOptions = [1, 2, 3, 4, 5,6,7,8,9,10];
 
   trainingOptions = [
     { value: 'th1', label: 'Treinamento - 1 (TH 1)' },

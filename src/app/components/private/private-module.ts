@@ -24,7 +24,6 @@ import { ExamResults } from './exam-results/exam-results';
 import { UserPanel } from './user-panel/user-panel';
 import { MatTabsModule } from '@angular/material/tabs';
 
-
 @NgModule({
   declarations: [
     Private,
@@ -52,7 +51,7 @@ import { MatTabsModule } from '@angular/material/tabs';
     MatListModule,    
     MatTooltipModule,
     LayoutModule,
-    MatTabsModule
+    MatTabsModule,
     
   ]
 })

@@ -1,10 +1,8 @@
 import { NgModule, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
-
 import { AppRoutingModule } from './app-routing-module';
 import { App } from './app';
-import { Private } from './components/private/private';
-import { Public } from './components/public/public';
+import { HttpClientModule, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 
 @NgModule({
   declarations: [
@@ -12,10 +10,14 @@ import { Public } from './components/public/public';
   ],
   imports: [
     BrowserModule,
-    AppRoutingModule
+    AppRoutingModule,
+    HttpClientModule
   ],
   providers: [
-    provideBrowserGlobalErrorListeners()
+    provideBrowserGlobalErrorListeners(),
+    provideHttpClient(
+      withInterceptorsFromDi(), // No lugar do HttpClientModule, usa-se esse
+    ),
   ],
   bootstrap: [App]
 })

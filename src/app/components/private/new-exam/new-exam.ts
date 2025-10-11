@@ -3,6 +3,8 @@ import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@ang
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Subscription } from 'rxjs';
 import { trainingData } from '../../../data/trainingData';
+import { ExamService } from '../../../services/exam.service';
+import { CreatedExamDTO, ExamCreateDTO, ExamGroupCreateDTO } from '../../../models/dtos';
 
 /** ===== Types ===== */
 type GlobalOptionGroup = { value: FormControl<number | null> };
@@ -10,7 +12,7 @@ type ItemGroup        = { text: FormControl<string> };
 
 type ExamForm = {
   examName: FormControl<string | null>;
-  examTheme: FormControl<string | null>;     // <<< NOVO CAMPO
+  examTheme: FormControl<string | null>;
   skillTraining: FormControl<string | null>;
   itemsCount: FormControl<number | null>;
   optionsCount: FormControl<number | null>;
@@ -21,13 +23,14 @@ type ExamForm = {
 };
 
 type GeneratedOption = { value: number | null };
+
 type GeneratedItem   = { text: string; options: GeneratedOption[]; totalPoints: number };
 
 type GeneratedExam = {
   id: number;
   createdAt: string;   // ISO
   examName: string | null;
-  examTheme: string | null;                 // <<< NOVO CAMPO
+  examTheme: string | null;
   skillTraining: string | null;
   itemsCount: number | null;
   clinicalCase: string | null;
@@ -35,12 +38,8 @@ type GeneratedExam = {
   totalPoints: number;
   items: GeneratedItem[];
   shareUrl: string;
-
-  // === NOVO: agrupamento ===
-  groupId: number;
+  groupId: number | null;
   groupSize: number;
-
-  // === COMPAT: a página atual usa "questions" ===
   questions?: { text: string; options: GeneratedOption[]; totalPoints: number }[];
 };
 
@@ -51,40 +50,40 @@ type GeneratedExam = {
   styleUrls: ['./new-exam.scss']
 })
 export class NewExam implements OnInit, OnDestroy {
+
   private readonly STORAGE_KEY = 'generatedExams';
 
-  // ===== Master form (múltiplas provas) =====
   form!: FormGroup<{
     examCount: FormControl<number>;
     exams: FormArray<FormGroup<ExamForm>>;
   }>;
 
-  // UI
   selectedIndex = 0;
-  examCountOptions = [1, 2, 3, 4, 5,6,7,8,9,10];
+  examCountOptions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
   trainingOptions = trainingData;
 
   itemCountOptions    = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15];
   optionsCountChoices = [2, 3, 4, 5];
 
-  // Persistência
   generatedExams: GeneratedExam[] = [];
   lastShareUrlByIndex: Record<number, string> = {};
 
   private subs: Subscription[] = [];
-  private examSubs: Subscription[][] = []; // listeners por aba
+  private examSubs: Subscription[][] = [];
 
-  constructor(private fb: FormBuilder, private snack: MatSnackBar) {
+  constructor(
+    private fb: FormBuilder,
+    private snack: MatSnackBar,
+    private examApi: ExamService
+  ) {
     this.form = this.fb.nonNullable.group({
       examCount: this.fb.control(1, { nonNullable: true, validators: [Validators.min(1), Validators.max(5)] }),
       exams: this.fb.array<FormGroup<ExamForm>>([])
     });
 
     this.loadFromStorage();
-
-    // Garante 1 prova antes da 1ª renderização
-    this.resizeExams(this.form.controls.examCount.value); // value = 1
+    this.resizeExams(this.form.controls.examCount.value);
   }
 
   ngOnInit(): void {
@@ -115,19 +114,19 @@ export class NewExam implements OnInit, OnDestroy {
   private createGlobalOption(defaultValue: number): FormGroup<GlobalOptionGroup> {
     return this.fb.nonNullable.group({
       value: this.fb.control<number | null>(defaultValue, [Validators.required, Validators.min(0)])
-    }) as FormGroup<GlobalOptionGroup>;
+    }) as unknown as FormGroup<GlobalOptionGroup>;
   }
 
   private createItemGroup(): FormGroup<ItemGroup> {
     return this.fb.nonNullable.group({
       text: this.fb.control<string>('', [Validators.required, Validators.minLength(3)]),
-    }) as FormGroup<ItemGroup>;
+    }) as unknown as FormGroup<ItemGroup>;
   }
 
   private createExamForm(): FormGroup<ExamForm> {
     const fg = this.fb.nonNullable.group({
       examName:      this.fb.control<string | null>(null, [Validators.required, Validators.minLength(3)]),
-      examTheme:     this.fb.control<string | null>(null, [Validators.required, Validators.minLength(3)]), // NOVO
+      examTheme:     this.fb.control<string | null>(null, [Validators.required, Validators.minLength(3)]),
       skillTraining: this.fb.control<string | null>(null, Validators.required),
       itemsCount:    this.fb.control<number | null>(3, Validators.required),
       optionsCount:  this.fb.control<number | null>(3, Validators.required),
@@ -137,7 +136,6 @@ export class NewExam implements OnInit, OnDestroy {
       examRules:     this.fb.control('', { nonNullable: true, validators: [Validators.required] })
     });
 
-    // listeners locais da prova
     const subs: Subscription[] = [];
     subs.push(
       fg.controls.itemsCount.valueChanges.subscribe(count => {
@@ -162,13 +160,10 @@ export class NewExam implements OnInit, OnDestroy {
       })
     );
 
-    // semente inicial
     fg.controls.itemsCount.setValue(fg.controls.itemsCount.value ?? 3, { emitEvent: true });
     fg.controls.optionsCount.setValue(fg.controls.optionsCount.value ?? 3, { emitEvent: true });
 
-    // guarda subs desta prova para limpar depois
     this.examSubs.push(subs);
-
     return fg as FormGroup<ExamForm>;
   }
 
@@ -179,7 +174,6 @@ export class NewExam implements OnInit, OnDestroy {
     if (current < target) {
       for (let i = current; i < target; i++) arr.push(this.createExamForm());
     } else if (current > target) {
-      // limpa listeners das provas removidas
       for (let i = current - 1; i >= target; i--) {
         const subs = this.examSubs[i] ?? [];
         subs.forEach(s => s.unsubscribe());
@@ -188,7 +182,6 @@ export class NewExam implements OnInit, OnDestroy {
       }
     }
 
-    // ajusta índice visível
     this.selectedIndex = Math.min(this.selectedIndex, this.examsArray.length - 1);
   }
 
@@ -202,7 +195,7 @@ export class NewExam implements OnInit, OnDestroy {
     return this.maxGlobalOptionOf(i) * this.itemsArray(i).length;
   }
 
-  // ===== Persistência =====
+  // ===== Persistência local (compat das outras telas) =====
   private loadFromStorage(): void {
     try {
       const raw = localStorage.getItem(this.STORAGE_KEY);
@@ -217,109 +210,115 @@ export class NewExam implements OnInit, OnDestroy {
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.generatedExams));
     } catch {}
   }
+private pushToLocal(created: CreatedExamDTO): void {
+  const items = created.questions.map(q => ({
+    text: q.text,
+    options: q.options.map(o => ({ value: o.value })),
+    totalPoints: q.totalPoints,
+  }));
 
-  private getShareUrl(id: number): string {
-    const base = `${window.location.origin}/private/responder-prova`;
-    return `${base}?examId=${id}`;
-  }
+  const asLocal: GeneratedExam = {
+    id: created.id,
+    createdAt: created.createdAt,
+    examName: created.examName,
+    examTheme: created.examTheme,
+    skillTraining: created.skillTraining,
+    itemsCount: created.questions.length,
+    clinicalCase: created.clinicalCase,
+    examRules: created.examRules,
+    totalPoints: created.totalPoints,
+    items, // agora populado
+    shareUrl: created.shareUrl,
+    // se seu GeneratedExam.groupId for number (não-null), force um fallback:
+    groupId: (created.groupId ?? 0) as number, 
+    groupSize: created.groupSize ?? 1,
 
-  // ===== Geração =====
-  private buildGeneratedFrom(i: number, groupId: number, groupSize: number): GeneratedExam | null {
+    // mantém também "questions" para compat com telas antigas
+    questions: created.questions.map(q => ({
+      text: q.text,
+      totalPoints: q.totalPoints,
+      options: q.options.map(o => ({ value: o.value })),
+    })),
+  };
+
+  this.generatedExams.unshift(asLocal);
+  this.persist();
+}
+
+  // ===== Monta payloads para o backend =====
+  private buildExamCreateDTO(i: number): ExamCreateDTO | null {
     const exam = this.examsArray.at(i);
     if (!exam.valid) {
       exam.markAllAsTouched();
       return null;
     }
 
-    const perItemMax = this.maxGlobalOptionOf(i);
+    const globalOpts = this.globalOptionsArray(i).controls.map(g => ({
+      value: Number(g.controls.value.value ?? 0)
+    }));
 
-    const templateOptions: GeneratedOption[] =
-      this.globalOptionsArray(i).controls.map(o => ({ value: o.controls.value.value }));
-
-    const items: GeneratedItem[] =
-      this.itemsArray(i).controls.map(it => ({
-        text: it.controls.text.value,
-        options: templateOptions.map(o => ({ value: o.value })),
-        totalPoints: perItemMax
-      }));
-
-    const totalPoints = perItemMax * items.length;
-    const id = Date.now() + i;
+    const questions = this.itemsArray(i).controls.map(it => ({
+      text: it.controls.text.value!,
+      options: globalOpts
+    }));
 
     const v = exam.getRawValue();
-    const gen: GeneratedExam = {
-      id,
-      createdAt: new Date().toISOString(),
-      examName: v.examName,
-      examTheme: v.examTheme ?? null,     // <<< NOVO CAMPO
-      skillTraining: v.skillTraining,
-      itemsCount: v.itemsCount,
-      clinicalCase: v.clinicalCase,
+    return {
+      examName: v.examName ?? null,
+      examTheme: v.examTheme!,                 // já validado
+      skillTraining: v.skillTraining ?? null,  // ex.: "th1"
+      clinicalCase: v.clinicalCase ?? null,
       examRules: (v.examRules ?? '').trim(),
-      totalPoints,
-      items,
-      shareUrl: '', // setado no caller
-      groupId,
-      groupSize,
-      questions: items.map(it => ({ text: it.text, options: it.options, totalPoints: it.totalPoints })) // compat
+      questions
     };
-
-    return gen;
   }
 
+  // ===== Integração =====
   generateOne(i: number): void {
-    const tempId = Date.now() + i;
-    const groupId = tempId; // grupo unitário
-    const groupSize = 1;
-
-    const gen = this.buildGeneratedFrom(i, groupId, groupSize);
-    if (!gen) {
+   
+    const payload = this.buildExamCreateDTO(i);
+    if (!payload) {
       this.snack.open(`Revise os campos obrigatórios da Prova ${i + 1}.`, 'Ok', { duration: 2500 });
       return;
     }
 
-    // link por examId
-    gen.shareUrl = this.getShareUrl(gen.id);
-
-    this.generatedExams.unshift(gen);
-    this.persist();
-    this.lastShareUrlByIndex[i] = gen.shareUrl;
-
-    this.snack.open(`Prova ${i + 1} gerada e salva localmente!`, 'Ok', { duration: 2500 });
+    this.examApi.createOne(payload).subscribe({
+      next: (created) => {
+        this.lastShareUrlByIndex[i] = created.shareUrl;
+        this.pushToLocal(created);
+        this.snack.open(`Prova ${i + 1} gerada no banco!`, 'Ok', { duration: 2500 });
+      },
+      error: () => this.snack.open('Falha ao criar prova no servidor.', 'Ok', { duration: 2500 })
+    });
   }
 
   generateAll(): void {
-    const groupId = Date.now(); // mesmo groupId para todas as abas
-    const groupSize = this.examsArray.length;
+ 
 
-    let ok = 0, fail = 0;
-    const toAdd: GeneratedExam[] = [];
+    const examsPayload: ExamCreateDTO[] = [];
 
     for (let i = 0; i < this.examsArray.length; i++) {
-      const gen = this.buildGeneratedFrom(i, groupId, groupSize);
-      if (gen) {
-        ok++;
-        // link por groupId
-        gen.shareUrl = `${window.location.origin}/private/responder-prova?groupId=${groupId}`;
-        toAdd.push(gen);
-        this.lastShareUrlByIndex[i] = gen.shareUrl;
-      } else {
-        fail++;
+      const dto = this.buildExamCreateDTO(i);
+      if (!dto) {
+        this.snack.open(`Pendências na Prova ${i + 1}.`, 'Ok', { duration: 2500 });
+        return;
       }
+      examsPayload.push(dto);
     }
 
-    if (toAdd.length) {
-      this.generatedExams.unshift(...toAdd);
-      this.persist();
-    }
+    const payload: ExamGroupCreateDTO = { title: null, exams: examsPayload };
 
-    if (ok && !fail) {
-      this.snack.open(`Todas as ${ok} provas foram geradas!`, 'Ok', { duration: 2500 });
-    } else if (ok && fail) {
-      this.snack.open(`${ok} prova(s) gerada(s), ${fail} com pendências.`, 'Ok', { duration: 3500 });
-    } else {
-      this.snack.open(`Nenhuma prova gerada. Revise os campos.`, 'Ok', { duration: 2500 });
-    }
+    this.examApi.createGroup(payload).subscribe({
+
+      next: (res) => {
+        res.exams.forEach((ex:CreatedExamDTO, idx:number) => {
+          this.lastShareUrlByIndex[idx] = ex.shareUrl;
+          this.pushToLocal(ex);
+        });
+        this.snack.open(`Criadas ${res.exams.length} provas no banco!`, 'Ok', { duration: 2500 });
+      },
+      error: () => this.snack.open('Falha ao criar grupo de provas no servidor.', 'Ok', { duration: 3000 })
+    });
   }
 
   // ===== Util =====

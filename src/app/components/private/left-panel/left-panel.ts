@@ -17,6 +17,7 @@ type Session = {
   styleUrls: ['./left-panel.scss']
 })
 export class LeftPanel implements OnInit, OnDestroy {
+  
   private readonly COLLAPSE_KEY = 'leftPanelCollapsed';
   private readonly AUTH_KEY = 'authUser';
   private readonly LOGOUT_REDIRECT = '/login'; // ajuste aqui se sua rota de login for diferente

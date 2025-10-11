@@ -2,6 +2,7 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Subscription } from 'rxjs';
+import { trainingData } from '../../../data/trainingData';
 
 /** ===== Types ===== */
 type GlobalOptionGroup = { value: FormControl<number | null> };
@@ -62,16 +63,7 @@ export class NewExam implements OnInit, OnDestroy {
   selectedIndex = 0;
   examCountOptions = [1, 2, 3, 4, 5,6,7,8,9,10];
 
-  trainingOptions = [
-    { value: 'th1', label: 'Treinamento - 1 (TH 1)' },
-    { value: 'th2', label: 'Treinamento - 2 (TH 2)' },
-    { value: 'th3', label: 'Treinamento - 3 (TH 3)' },
-    { value: 'th4', label: 'Treinamento - 4 (TH 4)' },
-    { value: 'th5', label: 'Treinamento - 5 (TH 5)' },
-    { value: 'th6', label: 'Treinamento - 6 (TH 6)' },
-    { value: 'th7', label: 'Treinamento - 7 (TH 7)' },
-    { value: 'th8', label: 'Treinamento - 8 (TH 8)' },
-  ];
+  trainingOptions = trainingData;
 
   itemCountOptions    = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15];
   optionsCountChoices = [2, 3, 4, 5];
